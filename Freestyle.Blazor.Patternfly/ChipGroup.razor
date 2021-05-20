@@ -1,0 +1,135 @@
+﻿<div class="pf-c-chip-group @(Category ? CssClassConstants.Category : String.Empty) @(Vertical ? CssClassConstants.Vertical : String.Empty)" @attributes="AdditionalAttributes">
+	<div class="pf-c-chip-group__main">
+		@if (!String.IsNullOrEmpty(Label))
+		{
+			<span class="pf-c-chip-group__label" aria-hidden="true" id="@id-label">@Label</span>
+		}
+		<ul class="pf-c-chip-group__list" role="list" aria-chipledby="@id-label">
+			<CascadingValue Name="ChipGroup" Value="this" IsFixed="true">
+				@ChildContent
+			</CascadingValue>
+			@if (MaxVisible > 0 && chips.Count() > MaxVisible)
+			{
+				if (Expanded)
+				{
+					<li class="pf-c-chip-group__list-item">
+						<button class="pf-c-chip pf-m-overflow" type="button" @onclick="Collapse">
+							<span class="pf-c-chip__text">Show less</span>
+						</button>
+					</li>
+				}
+				else
+				{
+					<li class="pf-c-chip-group__list-item">
+						<button class="pf-c-chip pf-m-overflow" type="button" @onclick="Expand">
+							<span class="pf-c-chip__text">@(chips.Count() - MaxVisible) more</span>
+						</button>
+					</li>
+				}
+			}
+		</ul>
+	</div>
+	@if (Removable)
+	{
+		<div class="pf-c-chip-group__close">
+			<button class="pf-c-button pf-m-plain" type="button" aria-chipledby="@id-remove-button @id-chip" aria-chip="@RemoveButtonLabel" id="@id-remove-button" @onclick="OnRemoveClick">
+				<i class="fas fa-times-circle" aria-hidden="true"></i>
+			</button>
+		</div>
+	}
+</div>
+
+@code {
+	private string id = Guid.NewGuid().ToString();
+	private List<Chip> chips = new List<Chip>();
+
+	private bool _expanded;
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public bool Category { get; set; }
+
+	[Parameter]
+	public bool Vertical { get; set; }
+
+	[Parameter]
+	public string Label { get; set; }
+
+	[Parameter]
+	public bool Removable { get; set; }
+
+	[Parameter]
+	public EventCallback<MouseEventArgs> OnRemoveClick { get; set; }
+
+	[Parameter]
+	public string RemoveButtonLabel { get; set; } = "Remove";
+
+	[Parameter]
+	public int MaxVisible { get; set; }
+
+	[Parameter]
+	public bool Expanded
+	{
+		get { return _expanded; }
+		set
+		{
+			if (value == _expanded) return;
+
+			_expanded = value;
+
+			UpdateChipVisibility();
+
+			ExpandedChanged.InvokeAsync(value);
+		}
+	}
+
+	[Parameter]
+	public EventCallback<bool> ExpandedChanged { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+
+	private void Expand()
+	{
+		Expanded = true;
+	}
+
+	private void Collapse()
+	{
+		Expanded = false;
+	}
+
+	internal void AddChip(Chip chip)
+	{
+		chips.Add(chip);
+
+		UpdateChipVisibility();
+	}
+
+	private void UpdateChipVisibility()
+	{
+		if (MaxVisible > 0)
+		{
+			foreach (Chip chip in chips.Take(MaxVisible))
+			{
+				chip.Visible = true;
+			}
+
+			foreach (Chip chip in chips.Skip(MaxVisible))
+			{
+				chip.Visible = Expanded;
+			}
+		}
+		else
+		{
+			foreach (Chip chip in chips)
+			{
+				chip.Visible = true;
+			}
+		}
+
+		StateHasChanged();
+	}
+}

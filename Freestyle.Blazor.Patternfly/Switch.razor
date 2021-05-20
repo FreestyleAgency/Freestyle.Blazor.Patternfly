@@ -1,0 +1,53 @@
+﻿<label class="pf-c-switch" for="@id">
+	<input class="pf-c-switch__input" type="checkbox" id="@id" aria-labelledby="@($"{id}-{(_checked ? "on" : "off")}")" disabled="@(!Enabled)" checked="@_checked" @attributes="AdditionalAttributes" />
+	<span class="pf-c-switch__toggle">
+		@if (String.IsNullOrEmpty(LabelOn))
+		{
+			<span class="pf-c-switch__toggle-icon">
+				<i class="fas fa-check" aria-hidden="true"></i>
+			</span>
+		}
+	</span>
+	@if (!String.IsNullOrEmpty(LabelOn))
+	{
+		<span class="pf-c-switch__label pf-m-on" id="@id-on" aria-hidden="true">@LabelOn</span>
+	}
+	@if (!String.IsNullOrEmpty(LabelOff))
+	{
+		<span class="pf-c-switch__label pf-m-off" id="@id-off" aria-hidden="true">@LabelOff</span>
+	}
+</label>
+
+@code {
+	private string id = Guid.NewGuid().ToString();
+
+	private bool _checked;
+
+	[Parameter]
+	public string LabelOn { get; set; }
+
+	[Parameter]
+	public string LabelOff { get; set; }
+
+	[Parameter]
+	public bool Enabled { get; set; } = true;
+
+	[Parameter]
+	public bool Checked
+	{
+		get => _checked;
+		set
+		{
+			if (_checked == value) return;
+
+			_checked = value;
+			CheckedChanged.InvokeAsync(value);
+		}
+	}
+
+	[Parameter]
+	public EventCallback<bool> CheckedChanged { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+}

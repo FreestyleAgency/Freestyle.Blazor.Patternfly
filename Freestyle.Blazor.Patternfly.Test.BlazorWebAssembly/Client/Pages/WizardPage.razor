@@ -1,0 +1,36 @@
+﻿@using System.ComponentModel;
+@page "/wizard"
+<PageSection Light="true" LimitWidth="true">
+	<Content>
+		<h1>Main title</h1>
+		<p>This is a demo of the Page component.</p>
+	</Content>
+</PageSection>
+<PageSection Type="PageSectionType.Wizard" LimitWidth="true">
+	<Wizard Title="This is the Wizard Title itself" ShowCancel="true">
+		<WizardStep Title="Information" StepId="information" NextStepId="configurationA">
+			<p>Things to do with information</p>
+		</WizardStep>
+		<WizardStep Title="Configuration">
+			<WizardStep Title="Substep A" StepId="configurationA" NextStepId="configurationB" PreviousStepId="information">
+				<p>Things to do with configuration A</p>
+			</WizardStep>
+			<WizardStep Title="Substep B" StepId="configurationB" NextStepId="configurationC" PreviousStepId="configurationA">
+				<p>Things to do with configuration B</p>
+			</WizardStep>
+			<WizardStep Title="Substep C" StepId="configurationC" NextStepId="additional" PreviousStepId="configurationB">
+				<p>Things to do with configuration V</p>
+			</WizardStep>
+		</WizardStep>
+		<WizardStep Title="Additional" StepId="additional" PreviousStepId="configurationC">
+			<p>Things to do with additional</p>
+		</WizardStep>
+		<WizardStep Title="Review" StepId="review" Enabled="false">
+			<p>Things to do with review</p>
+		</WizardStep>
+	</Wizard>
+</PageSection>
+
+@code {
+
+}

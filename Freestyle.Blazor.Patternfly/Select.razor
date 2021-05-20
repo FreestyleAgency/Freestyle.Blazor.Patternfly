@@ -1,0 +1,364 @@
+﻿@inject IOutsideClickListener OutsideClickListener 
+
+<div @ref="selectElement" class="pf-c-select @(Expanded ? CssClassConstants.Expanded : String.Empty) @(VerticalAlignment == TopBottomVerticalAlignment.Top ? CssClassConstants.Top : String.Empty)">
+	<span id="@id-label" hidden>@LabelText</span>
+	@if (FilterMode == SelectFilterMode.Typeahead)
+	{
+		<div class="pf-c-select__toggle pf-m-typeahead @(Enabled ? String.Empty : CssClassConstants.Disabled) @(Plain ? CssClassConstants.Plain : String.Empty)" disabled="@(!Enabled)">
+			<div class="pf-c-select__toggle-wrapper">
+				@if (!String.IsNullOrEmpty(IconCssClass))
+				{
+					<span class="pf-c-select__toggle-icon">
+						<i class="@IconCssClass" aria-hidden="true"></i>
+					</span>
+				}
+				@if (Mode != SelectMode.Single && SelectedItems != null && SelectedItems.Any())
+				{
+					<ChipGroup MaxVisible="ChipGroupMaxVisible">
+						@foreach (var item in SelectedItems)
+						{
+							<Chip Text="@item.Title" OnRemoveClick="() => item.Deselect()" />
+						}
+					</ChipGroup>
+				}
+				<input class="pf-c-form-control pf-c-select__toggle-typeahead" type="text" id="@id-typeahead" aria-label="Type to filter" placeholder="@DisplayText" disabled="@(!Enabled)" @bind-value="TypeaheadValue" @bind-value:event="oninput" />
+			</div>
+			@if (!String.IsNullOrEmpty(TypeaheadValue))
+			{
+				<button class="pf-c-button pf-m-plain pf-c-select__toggle-clear" type="button" aria-label="Clear all" @onclick="ClearTypeahead">
+					<i class="fas fa-times-circle" aria-hidden="true"></i>
+				</button>
+			}
+			<button class="pf-c-button pf-m-plain pf-c-select__toggle-button" type="button" id="@id-toggle" aria-haspopup="true" aria-expanded="false" aria-labelledby="@id-label @id-toggle" aria-label="Select" disabled="@(!Enabled)" @onclick="ToggleExpanded">
+				<i class="fas fa-caret-down pf-c-select__toggle-arrow" aria-hidden="true"></i>
+			</button>
+		</div>
+	}
+	else
+	{
+		<button class="pf-c-select__toggle @(Enabled ? String.Empty : CssClassConstants.Disabled) @(Plain ? CssClassConstants.Plain : String.Empty)" type="button" id="@id-toggle" aria-haspopup="true" aria-expanded="@Expanded.ToString()" aria-labelledby="@id-label @id-toggle" disabled="@(!Enabled)" @onclick="ToggleExpanded">
+			<div class="pf-c-select__toggle-wrapper">
+				@if (!String.IsNullOrEmpty(IconCssClass))
+				{
+					<span class="pf-c-select__toggle-icon">
+						<i class="@IconCssClass" aria-hidden="true"></i>
+					</span>
+				}
+				<span class="pf-c-select__toggle-text">@DisplayText</span>
+				@if (Mode != SelectMode.Single && SelectedItems != null && SelectedItems.Any())
+				{
+					<div class="pf-c-select__toggle-badge">
+						<Badge Text="@SelectedItems.Count().ToString()" Read="true" />
+					</div>
+				}
+			</div>
+			<span class="pf-c-select__toggle-arrow">
+				<i class="fas fa-caret-down" aria-hidden="true"></i>
+			</span>
+		</button>
+	}
+	@if (Grouped)
+	{
+		<div class="pf-c-select__menu" role="listbox" aria-labelledby="@id-label" hidden="@(!Expanded)">
+			@if (FilterMode == SelectFilterMode.InMenu)
+			{
+				<div class="pf-c-select__menu-search">
+					<input class="pf-c-form-control pf-m-search" type="search" id="@id-search-input" aria-label="Search" @bind-value="FilterValue" @bind-value:event="oninput" />
+				</div>
+				<hr class="pf-c-divider" />
+			}
+			@if (!filterHasMatches)
+			{
+				<div><button class="pf-c-select__menu-item pf-m-disabled" role="option" type="button">No results found</button></div>
+			}
+			<CascadingValue Name="Select" Value="this" IsFixed="true">
+				@ChildContent
+			</CascadingValue>
+		</div>
+	}
+	else
+	{
+		if (Mode == SelectMode.Checkbox)
+		{
+			<fieldset class="pf-c-select__menu-fieldset" aria-labelledby="@id-label" hidden="@(!Expanded)">
+				@if (!filterHasMatches)
+				{
+					<div><button class="pf-c-select__menu-item pf-m-disabled" role="option" type="button">No results found</button></div>
+				}
+				<CascadingValue Name="Select" Value="this" IsFixed="true">
+					@ChildContent
+				</CascadingValue>
+			</fieldset>
+		}
+		else
+		{
+			<ul class="pf-c-select__menu" role="listbox" aria-labelledby="@id-label" hidden="@(!Expanded)">
+				@if (!filterHasMatches)
+				{
+					<li><button class="pf-c-select__menu-item pf-m-disabled" role="option" type="button">No results found</button></li>
+				}
+				<CascadingValue Name="Select" Value="this" IsFixed="true">
+					@ChildContent
+				</CascadingValue>
+			</ul>
+		}
+	}
+</div>
+
+@code {
+	private string id = Guid.NewGuid().ToString();
+	private bool filterHasMatches = true;
+	private ElementReference selectElement;
+	private List<SelectGroup> groups { get; set; } = new List<SelectGroup>();
+	private List<SelectItem> items { get; set; } = new List<SelectItem>();
+
+	private bool _expanded;
+	private bool _enabled = true;
+	private string _typeaheadValue;
+	private string _filterValue;
+	private IEnumerable<SelectItem> _selectedItems;
+
+	[Parameter]
+	public string LabelText { get; set; } = "Select one";
+
+	[Parameter]
+	public string Text { get; set; }
+
+	[Parameter]
+	public bool Expanded
+	{
+		get { return _expanded; }
+		set
+		{
+			if (value == _expanded) return;
+
+			_expanded = value;
+
+			if (ExpandedChanged.HasDelegate)
+				ExpandedChanged.InvokeAsync(value);
+		}
+	}
+
+	[Parameter]
+	public EventCallback<bool> ExpandedChanged { get; set; }
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public bool Enabled
+	{
+		get { return _enabled; }
+		set
+		{
+			_enabled = value;
+
+			if (!value) Expanded = false;
+		}
+	}
+
+	[Parameter]
+	public TopBottomVerticalAlignment VerticalAlignment { get; set; } = TopBottomVerticalAlignment.Bottom;
+
+	[Parameter]
+	public string TypeaheadValue
+	{
+		get { return _typeaheadValue; }
+		set
+		{
+			if (value == _typeaheadValue) return;
+
+			_typeaheadValue = value;
+
+			if (TypeaheadValueChanged.HasDelegate)
+				TypeaheadValueChanged.InvokeAsync(value);
+
+			FilterItems(value);
+
+			if (!String.IsNullOrEmpty(value))
+				Expanded = true;
+		}
+	}
+
+	[Parameter]
+	public EventCallback<string> TypeaheadValueChanged { get; set; }
+
+	[Parameter]
+	public EventCallback<IEnumerable<SelectItem>> SelectedItemsChanged { get; set; }
+
+	[Parameter]
+	public SelectMode Mode { get; set; } = SelectMode.Single;
+
+	[Parameter]
+	public SelectFilterMode FilterMode { get; set; } = SelectFilterMode.None;
+
+	[Parameter]
+	public int ChipGroupMaxVisible { get; set; }
+
+	[Parameter]
+	public bool Plain { get; set; }
+
+	[Parameter]
+	public string IconCssClass { get; set; }
+
+	[Parameter]
+	public string FilterValue
+	{
+		get { return _filterValue; }
+		set
+		{
+			if (value == _filterValue) return;
+
+			_filterValue = value;
+
+			if (FilterValueChanged.HasDelegate)
+				FilterValueChanged.InvokeAsync(value);
+
+			FilterItems(value);
+		}
+	}
+
+	[Parameter]
+	public EventCallback<string> FilterValueChanged { get; set; }
+
+	[Parameter]
+	public bool ManageSelection { get; set; }
+
+	private IEnumerable<SelectItem> SelectedItems
+	{
+		get { return items.Where(x => x.Selected); }
+	}
+
+	private bool Grouped
+	{
+		get { return groups.Any(); }
+	}
+
+	private string SelectedItemTitle
+	{
+		get { return SelectedItems.FirstOrDefault()?.Title; }
+	}
+
+	private string DisplayText
+	{
+		get
+		{
+			if (Mode == SelectMode.Single)
+			{
+				return (SelectedItems != null && SelectedItems.Any()) ? SelectedItemTitle : Text;
+			}
+			else
+			{
+				return Text ?? LabelText;
+			}
+		}
+	}
+
+	protected override void OnInitialized()
+	{
+		OutsideClickListener.ClickOutside += (o, e) =>
+		{
+			if (Expanded)
+			{
+				Expanded = false;
+
+				StateHasChanged();
+			}
+		};
+
+		base.OnInitialized();
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		OutsideClickListener.Register(selectElement);
+
+		await base.OnAfterRenderAsync(firstRender);
+	}
+
+	private void ToggleExpanded()
+	{
+		Expanded = Enabled && !Expanded;
+	}
+
+	private void ClearTypeahead()
+	{
+		TypeaheadValue = String.Empty;
+	}
+
+	private void FilterItems(string regex)
+	{
+		if (string.IsNullOrEmpty(regex))
+		{
+			foreach (var item in items)
+			{
+				item.Visible = true;
+				item.HighlightRegex = regex;
+
+				filterHasMatches = true;
+			}
+		}
+		else
+		{
+			filterHasMatches = false;
+
+			foreach (var item in items)
+			{
+				item.Visible = System.Text.RegularExpressions.Regex.IsMatch(item.Title, regex, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+				item.HighlightRegex = regex;
+
+				filterHasMatches = filterHasMatches | item.Visible;
+			}
+		}
+
+		StateHasChanged();
+	}
+
+	internal void AddItem(SelectItem item)
+	{
+		items.Add(item);
+
+		StateHasChanged();
+	}
+
+	internal void AddGroup(SelectGroup group)
+	{
+		groups.Add(group);
+
+		StateHasChanged();
+	}
+
+	internal void ItemClicked(SelectItem item)
+	{
+		if (Mode == SelectMode.Single)
+		{
+			Expanded = false;
+		}
+	}
+
+	internal void ItemSelectedChanged(SelectItem item)
+	{
+		if (Mode == SelectMode.Single && item.Selected)
+		{
+			if (ManageSelection)
+			{
+				foreach (var otherItem in items)
+				{
+					if (otherItem == item) continue;
+
+					otherItem.Deselect();
+				}
+
+				Text = item.Title;
+			}
+
+			Expanded = false;
+		}
+
+		if (ManageSelection)
+			if (SelectedItemsChanged.HasDelegate)
+				SelectedItemsChanged.InvokeAsync(_selectedItems);
+
+		StateHasChanged();
+	}
+}

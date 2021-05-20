@@ -1,0 +1,108 @@
+﻿@using Humanizer 
+@implements IDisposable
+
+<li class="pf-c-notification-drawer__list-item pf-m-hoverable @CssClassConstants.GetImportanceCssClass(Importance) @(Read ? CssClassConstants.Read : String.Empty)" tabindex="0" @attributes="AdditionalAttributes">
+	<div class="pf-c-notification-drawer__list-item-header">
+		<span class="pf-c-notification-drawer__list-item-header-icon">
+			<i class="@(IconCssClass ?? $"fas {CssClassConstants.GetImportanceIconCssClass(Importance)}")" aria-hidden="true"></i>
+		</span>
+		<h2 class="pf-c-notification-drawer__list-item-header-title">
+			<span class="pf-screen-reader">@TitleScreenreaderPrefix </span>@Title</h2>
+	</div>
+	@if (Actions != null)
+	{
+		<div class="pf-c-notification-drawer__list-item-action">
+			@Actions
+		</div>
+	}
+	<div class="pf-c-notification-drawer__list-item-description">@ChildContent</div>
+	<div class="pf-c-notification-drawer__list-item-timestamp">@TimeStamp</div>
+</li>
+
+@code {
+	private System.Threading.Timer _timestampTimer;
+	private bool _read;
+
+	[Parameter]
+	public Importance Importance { get; set; }
+
+	[Parameter]
+	public RenderFragment Actions { get; set; }
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public string TitleScreenreaderPrefix { get; set; }
+
+	[Parameter]
+	public string Title { get; set; }
+
+	[Parameter]
+	public bool Read
+	{
+		get { return _read; }
+		set
+		{
+			if (value == _read) return;
+
+			_read = value;
+
+			NotificationDrawer?.Update();
+			NotificationDrawerGroup?.Update();
+		}
+	}
+
+	[Parameter]
+	public DateTime DateTime { get; set; } = DateTime.UtcNow;
+
+	[CascadingParameter(Name = "NotificationDrawer")]
+	protected NotificationDrawer NotificationDrawer { get; set; }
+
+	[CascadingParameter(Name = "NotificationDrawerGroup")]
+	protected NotificationDrawerGroup NotificationDrawerGroup { get; set; }
+
+	[Parameter]
+	public bool AutoUpdateTimestamp { get; set; } = true;
+
+	[Parameter]
+	public string IconCssClass { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+
+	private string TimeStamp
+	{
+		get
+		{
+			return DateTime.ToUniversalTime().Humanize();
+		}
+	}
+
+	protected override void OnInitialized()
+	{
+		if (NotificationDrawer == null)
+			throw new InvalidOperationException("NotificationDrawerItem must be nested in a NotificationDrawer component.");
+
+		NotificationDrawer.AddItem(this);
+
+		if (NotificationDrawerGroup != null)
+			NotificationDrawerGroup.AddItem(this);
+
+		_timestampTimer = new System.Threading.Timer(o =>
+		{
+			if (AutoUpdateTimestamp)
+				(o as NotificationDrawerItem).StateHasChanged();
+		}, this, 60000, 60000);
+
+		base.OnInitialized();
+	}
+
+	public void Dispose()
+	{
+		NotificationDrawer.RemoveItem(this);
+
+		if (NotificationDrawerGroup != null)
+			NotificationDrawerGroup.RemoveItem(this);
+	}
+}

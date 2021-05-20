@@ -1,0 +1,135 @@
+﻿<div class="pf-c-label-group @(Category ? CssClassConstants.Category : String.Empty) @(Vertical ? CssClassConstants.Vertical : String.Empty)" @attributes="AdditionalAttributes">
+	<div class="pf-c-label-group__main">
+		@if (!String.IsNullOrEmpty(Label))
+		{
+			<span class="pf-c-label-group__label" aria-hidden="true" id="@id-label">@Label</span>
+		}
+		<ul class="pf-c-label-group__list" role="list" aria-labelledby="@id-label">
+			<CascadingValue Name="LabelGroup" Value="this" IsFixed="true">
+				@ChildContent
+			</CascadingValue>
+			@if (MaxVisible > 0 && labels.Count() > MaxVisible)
+			{
+				if (Expanded)
+				{
+					<li class="pf-c-label-group__list-item">
+						<button class="pf-c-label pf-m-overflow" type="button" @onclick="Collapse">
+							<span class="pf-c-label__content">Show less</span>
+						</button>
+					</li>
+				}
+				else
+				{
+					<li class="pf-c-label-group__list-item">
+						<button class="pf-c-label pf-m-overflow" type="button" @onclick="Expand">
+							<span class="pf-c-label__content">@(labels.Count() - MaxVisible) more</span>
+						</button>
+					</li>
+				}
+			}
+		</ul>
+	</div>
+	@if (Removable)
+	{
+		<div class="pf-c-label-group__close">
+			<button class="pf-c-button pf-m-plain" type="button" aria-labelledby="@id-remove-button @id-label" aria-label="@RemoveButtonLabel" id="@id-remove-button" @onclick="OnRemoveClick">
+				<i class="fas fa-times-circle" aria-hidden="true"></i>
+			</button>
+		</div>
+	}
+</div>
+
+@code {
+	private string id = Guid.NewGuid().ToString();
+	private List<Label> labels = new List<Label>();
+
+	private bool _expanded;
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public bool Category { get; set; }
+
+	[Parameter]
+	public bool Vertical { get; set; }
+
+	[Parameter]
+	public string Label { get; set; }
+
+	[Parameter]
+	public bool Removable { get; set; }
+
+	[Parameter]
+	public EventCallback<MouseEventArgs> OnRemoveClick { get; set; }
+
+	[Parameter]
+	public string RemoveButtonLabel { get; set; } = "Remove";
+
+	[Parameter]
+	public int MaxVisible { get; set; }
+
+	[Parameter]
+	public bool Expanded
+	{
+		get { return _expanded; }
+		set
+		{
+			if (value == _expanded) return;
+
+			_expanded = value;
+
+			UpdateLabelVisibility();
+
+			ExpandedChanged.InvokeAsync(value);
+		}
+	}
+
+	[Parameter]
+	public EventCallback<bool> ExpandedChanged { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+
+	private void Expand()
+	{
+		Expanded = true;
+	}
+
+	private void Collapse()
+	{
+		Expanded = false;
+	}
+
+	internal void AddLabel(Label label)
+	{
+		labels.Add(label);
+
+		UpdateLabelVisibility();
+	}
+
+	private void UpdateLabelVisibility()
+	{
+		if (MaxVisible > 0)
+		{
+			foreach (var label in labels.Take(MaxVisible))
+			{
+				label.Visible = true;
+			}
+
+			foreach (var label in labels.Skip(MaxVisible))
+			{
+				label.Visible = Expanded;
+			}
+		}
+		else
+		{
+			foreach (var label in labels)
+			{
+				label.Visible = true;
+			}
+		}
+
+		StateHasChanged();
+	}
+}

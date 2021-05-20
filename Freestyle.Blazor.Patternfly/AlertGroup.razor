@@ -1,0 +1,31 @@
+﻿@using System.ComponentModel;
+@inject IJSFunctions JSFunctions
+
+<ul @ref="_groupRef" class="pf-c-alert-group @(Toast ? CssClassConstants.Toast : String.Empty)" @attributes="Attributes">
+	<CascadingValue Value="this" Name="AlertGroup" IsFixed="true">
+		@ChildContent
+	</CascadingValue>
+</ul>
+
+@code {
+	private ElementReference _groupRef;
+
+	[Parameter]
+	public bool Toast { get; set; } = false;
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> Attributes { get; set; }
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (Toast)
+		{
+			await JSFunctions.MoveToBodyEndAsync(_groupRef);
+		}
+
+		await base.OnAfterRenderAsync(firstRender);
+	}
+}

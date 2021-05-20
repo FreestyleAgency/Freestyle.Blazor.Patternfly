@@ -1,0 +1,66 @@
+﻿<li class="pf-c-breadcrumb__item">
+	@if (!IsFirst)
+	{
+		<span class="pf-c-breadcrumb__item-divider">
+			<i class="fas fa-angle-right" aria-hidden="true"></i>
+		</span>
+	}
+	@if (DisplayAsH1)
+	{
+		@:<h1 class="pf-c-breadcrumb__heading">
+	}
+	@if (useLink)
+	{
+		<a href="@(Url ?? "#")" class="pf-c-breadcrumb__link @(IsCurrent ? CssClassConstants.Current : String.Empty)" aria-current="@(IsCurrent ? "page" : null)" @onclick="OnClick" @onclick:preventDefault="preventNavigation">@Title</a>
+	}
+	else
+	{
+		@Title
+	}
+	@if (DisplayAsH1)
+	{
+		@:</h1>
+	}
+</li>
+
+@code {
+	bool useLink = false;
+	string href = "#";
+	bool preventNavigation = false;
+
+	private bool IsFirst { get; set; }
+
+	[Parameter]
+	public string Title { get; set; }
+
+	[Parameter]
+	public string Url { get; set; }
+
+	[Parameter]
+	public bool IsCurrent { get; set; }
+
+	[Parameter]
+	public bool DisplayAsH1 { get; set; }
+
+	[Parameter]
+	public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+	[CascadingParameter(Name = "Breadcrumb")]
+	Breadcrumb Breadcrumb { get; set; }
+
+	protected override Task OnInitializedAsync()
+	{
+		useLink = !String.IsNullOrEmpty(Url) || OnClick.HasDelegate;
+		href = String.IsNullOrEmpty(Url) ? "#" : Url;
+		preventNavigation = href == "#" || OnClick.HasDelegate;
+
+		return base.OnInitializedAsync();
+	}
+
+	internal void SetContext(bool isFirst)
+	{
+		IsFirst = isFirst;
+
+		StateHasChanged();
+	}
+}

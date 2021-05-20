@@ -1,0 +1,70 @@
+﻿@page "/NotificationDrawer"
+
+<section class="pf-c-page__main-section pf-m-light">
+	<Drawer DrawerPosition="DrawerPosition.Right" Expanded="true">
+		<DrawerHeaderContent>
+			This is the header
+		</DrawerHeaderContent>
+		<DrawerContent>
+			<NotificationDrawer>
+				<NotificationDrawerItem Title="Test 1" Importance="Importance.Information" DateTime="DateTime.UtcNow.AddMinutes(-574)">
+					This is an info notification.
+				</NotificationDrawerItem>
+				<NotificationDrawerItem Title="Danger Will Robinson!" Importance="Importance.Danger" Read="true" DateTime="DateTime.UtcNow.AddMinutes(-43578)">
+					This is a danger notification.
+				</NotificationDrawerItem>
+			</NotificationDrawer>
+		</DrawerContent>
+		<MainContent>
+			<Popover @bind-Visible="_popoverVisible" Placement="Placement.Bottom" Title="This is a sample popover">
+				<BodyContent>
+					This is the main body of the popover.
+				</BodyContent>
+				<FooterContent>
+					This is the footer
+				</FooterContent>
+				<ChildContent>
+					This is the content that the popover is attached to.
+
+					<OptionsMenu Text="Options menu" MenuAlignment="TopBottomVerticalAlignment.Bottom">
+						<OptionsMenuGroup Title="Group 1">
+							<OptionsMenuItem Selected="true" CollapseOnClick="false">Item 1</OptionsMenuItem>
+							<OptionsMenuItem CollapseOnClick="false">Item 2</OptionsMenuItem>
+							<OptionsMenuItem CollapseOnClick="false">Item 3</OptionsMenuItem>
+						</OptionsMenuGroup>
+						<OptionsMenuGroup Title="Group 2">
+							<OptionsMenuItem Selected="true" CollapseOnClick="false">Item 4</OptionsMenuItem>
+							<OptionsMenuItem CollapseOnClick="false">Item 5</OptionsMenuItem>
+							<OptionsMenuItem CollapseOnClick="false">Item 6</OptionsMenuItem>
+						</OptionsMenuGroup>
+					</OptionsMenu>
+				</ChildContent>
+			</Popover>
+			<Content>
+				<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse dignissim, metus at condimentum mollis, nisi urna porta urna, ac varius sem nulla id lorem. Nullam sit amet cursus felis. Phasellus interdum est posuere, rhoncus ante vel, faucibus neque. Praesent interdum dictum posuere. Cras dignissim mauris vel ante finibus condimentum. Donec ac ultrices orci. Proin pulvinar lacus in scelerisque tincidunt. In mattis mi sem, et commodo felis consectetur sit amet. Ut ac semper quam. Proin pretium tortor et auctor vehicula. Duis quis erat non augue congue congue.</p>
+				<p>Pellentesque bibendum eu nisi laoreet lacinia. Vivamus posuere bibendum est malesuada blandit. Curabitur non quam nulla. Duis ac nibh massa. Duis rutrum viverra tortor, vel vestibulum nisl auctor at. Fusce quis odio metus. Proin sed faucibus ex. Donec scelerisque pellentesque ex in congue. Etiam lacinia nisi porta tortor consequat lacinia. Duis viverra, felis in vehicula vestibulum, mauris elit scelerisque nibh, eu convallis felis nisi vel ipsum. Quisque viverra leo mi, at viverra enim placerat id. Quisque tincidunt velit ipsum, vitae pharetra tellus ornare ut. In vehicula sodales facilisis.</p>
+				<p>Duis sed venenatis augue. Phasellus et posuere neque. Vestibulum ut turpis ut magna commodo rutrum id non diam. Sed id sodales felis. Aenean condimentum cursus elit, vitae commodo purus tincidunt eu. Sed non condimentum libero. Sed aliquam purus eget lobortis accumsan. Phasellus faucibus a mauris eu pellentesque.</p>
+				<p>Phasellus ut massa sed lacus mattis gravida. Duis tristique ligula ac ex viverra, sit amet vestibulum metus sagittis. Curabitur nec quam ex. Maecenas quam sapien, congue cursus pretium at, pretium molestie leo. Curabitur purus nisl, vehicula at commodo ac, fringilla in libero. Praesent a mauris orci. Morbi placerat, turpis ornare dignissim porttitor, orci nunc tempor libero, id malesuada purus felis ac urna. Proin sed tellus nibh. Maecenas quis leo lectus. Nam placerat eros tincidunt dui fringilla placerat. Suspendisse potenti. Cras eu turpis vel nibh ultrices fermentum sed in neque. Aenean hendrerit tristique efficitur. Quisque a justo metus. In malesuada volutpat semper.</p>
+				<p>Integer et metus elit. Maecenas semper ipsum eros, mollis vestibulum eros rhoncus egestas. Nullam venenatis leo in nulla laoreet, ac tempus eros tincidunt. In massa nulla, pharetra a sapien sed, gravida tristique risus. Mauris imperdiet pellentesque elit eu scelerisque. Duis dolor ligula, consequat id ipsum id, ultricies aliquet risus. Nullam vel semper quam. Etiam finibus arcu sit amet cursus mattis. Maecenas et risus quis felis hendrerit semper ac vitae nisi. Vivamus luctus hendrerit ante sit amet faucibus. Phasellus interdum massa ex, non gravida eros egestas iaculis. Donec nec lacus pulvinar, finibus eros a, viverra sapien. Etiam feugiat libero nibh, sed eleifend ipsum porta vitae. Nam ex elit, faucibus sed sagittis imperdiet, sagittis ut ante. Integer pretium, nisl vitae pellentesque faucibus, tortor lorem scelerisque purus, rutrum posuere libero risus non velit. Cras a accumsan quam.</p>
+			</Content>
+			<Pagination TotalItems="1000" EnableShowAll="true" />
+			<p>... Some paginated items here ...</p>
+			<Pagination TotalItems="1000" EnableShowAll="true" VerticalAlignment="TopBottomVerticalAlignment.Bottom" />
+			<Content>
+				<p>Here's a progress bar or two:</p>
+			</Content>
+			<Progress CurrentValue="33" Title="Bar 1" />
+			<Progress CurrentValue="75" Title="Bar 2" Size="Size.Small" />
+			<Progress CurrentValue="100" Title="Bar 3" Importance="Importance.Success" ProgressTextPosition="InsideOutsidePosition.Inside" />
+			<Progress CurrentValue="10" Title="Bar 4" Importance="Importance.Danger" ProgressTextPosition="InsideOutsidePosition.Outside" />
+			<Content>
+				<p>What would the world be like <Tooltip Text="Some text">without radios</Tooltip>?</p>
+			</Content>
+			<Radio Label="Hello world" Description="This can take a description too" />
+		</MainContent>
+	</Drawer>
+</section>
+
+@code {
+	private bool _popoverVisible = true;
+}

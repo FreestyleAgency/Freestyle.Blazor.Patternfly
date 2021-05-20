@@ -1,0 +1,78 @@
+﻿<li>
+	<a class="pf-c-dropdown__menu-item pf-m-link @(!Enabled ? CssClassConstants.Disabled : String.Empty)" aria-disabled="@(!Enabled)" href="@Href" target="@Target" tabindex="@(Enabled ? (int?)null : -1)" @onclick="HandleOnClick" @attributes="Attributes" @onclick:stopPropagation="true">
+		<div class="pf-c-dropdown__menu-item-main">
+			@if (!String.IsNullOrEmpty(IconUrl) || !String.IsNullOrEmpty(IconCssClass))
+			{
+				<span class="pf-c-dropdown__menu-item-icon">
+					@if (!String.IsNullOrEmpty(IconUrl))
+					{
+						<img src="@IconUrl" alt="Icon" aria-hidden="true" />
+					}
+					else
+					{
+						<i class="@IconCssClass" aria-hidden="true"></i>
+					}
+				</span>
+			}
+			@Text
+		</div>
+		@if (!String.IsNullOrEmpty(Description))
+		{
+			<div class="pf-c-dropdown__menu-item-description">@Description</div>
+		}
+	</a>
+</li>
+
+@code {
+	[Parameter]
+	public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+	[Parameter]
+	public string Target { get; set; }
+
+	[Parameter]
+	public string Href { get; set; }
+
+	[Parameter]
+	public string IconUrl { get; set; }
+
+	[Parameter]
+	public string IconCssClass { get; set; }
+
+	[Parameter]
+	public string Text { get; set; }
+
+	[Parameter]
+	public string Description { get; set; }
+
+	[Parameter]
+	public bool Enabled { get; set; } = true;
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> Attributes { get; set; }
+
+	[CascadingParameter(Name = "Dropdown")]
+	public Dropdown Dropdown { get; set; }
+
+	[CascadingParameter(Name = "DropdownGroup")]
+	public DropdownGroup DropdownGroup { get; set; }
+
+	[Parameter]
+	public bool CollapseOnClick { get; set; } = true;
+
+	protected override void OnInitialized()
+	{
+		if (Dropdown.HasGroups && DropdownGroup == null)
+			throw new Exception("All menu items must be within a DropdownGroup if an Dropdown contains at least 1 group.");
+
+		base.OnInitialized();
+	}
+
+	private void HandleOnClick(MouseEventArgs mouseEventArgs)
+	{
+		OnClick.InvokeAsync(mouseEventArgs);
+
+		if (CollapseOnClick)
+			Dropdown.Collapse();
+	}
+}

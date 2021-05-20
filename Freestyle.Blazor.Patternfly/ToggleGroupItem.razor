@@ -1,0 +1,72 @@
+﻿@if (ToggleGroup != null && ToggleGroup.Items.FirstOrDefault() != this)
+{
+	<div class="pf-c-divider pf-m-vertical" role="separator"></div>
+}
+<div class="pf-c-toggle-group__item">
+	<button class="pf-c-toggle-group__button @(Selected ? CssClassConstants.Selected : String.Empty) @(ToggleGroup != null && ToggleGroup.Light ? CssClassConstants.Light : String.Empty)" disabled="@(!Enabled)" @attributes="AdditionalAttributes" @onclick:stopPropagation>
+		@if (ShowSpinner)
+		{
+			<span class="pf-c-button__progress">
+				<span class="pf-c-spinner pf-m-md" role="progressbar" aria-valuetext="Loading...">
+					<span class="pf-c-spinner__clipper"></span>
+					<span class="pf-c-spinner__lead-ball"></span>
+					<span class="pf-c-spinner__tail-ball"></span>
+				</span>
+			</span>
+		}
+		@if (!String.IsNullOrEmpty(IconCssClass) && IconPosition == LeftRightHorizontalAlignment.Left)
+		{
+			<span class="pf-c-toggle-group__icon">
+				<i class="@IconCssClass" aria-hidden="true"></i>
+			</span>
+		}
+		@if (!String.IsNullOrEmpty(Text))
+		{
+			<span class="pf-c-toggle-group__text">@Text</span>		
+		}
+		@if (!String.IsNullOrEmpty(IconCssClass) && IconPosition == LeftRightHorizontalAlignment.Right)
+		{
+			<span class="pf-c-toggle-group__icon">
+				<i class="@IconCssClass" aria-hidden="true"></i>
+			</span>
+		}
+	</button>
+</div>
+
+@code {
+	private bool _visible = true;
+
+	[Parameter]
+	public bool ShowSpinner { get; set; }
+
+	[Parameter]
+	public string Text { get; set; }
+
+	[Parameter]
+	public string IconCssClass { get; set; }
+
+	[Parameter]
+	public LeftRightHorizontalAlignment IconPosition { get; set; } = LeftRightHorizontalAlignment.Left;
+
+	[Parameter]
+	public bool Enabled { get; set; } = true;
+
+	[Parameter]
+	public bool Selected { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+
+	[CascadingParameter(Name = "ToggleGroup")]
+	protected ToggleGroup ToggleGroup { get; set; }
+
+	protected override Task OnInitializedAsync()
+	{
+		if (ToggleGroup != null)
+		{
+			ToggleGroup.AddItem(this);
+		}
+
+		return base.OnInitializedAsync();
+	}
+}

@@ -1,0 +1,86 @@
+﻿<div class="pf-c-drawer @(Inline ? CssClassConstants.Inline : String.Empty) @(DrawerPosition == DrawerPosition.Left ? CssClassConstants.PanelLeft : String.Empty) @(DrawerPosition == DrawerPosition.Bottom ? CssClassConstants.PanelBottom : String.Empty) @(Expanded ? CssClassConstants.Expanded : String.Empty) @AdditionalCssClass">
+	@if (BeforeMain != null)
+	{
+		<div class="pf-c-drawer__section">@BeforeMain</div>
+	}
+	<div class="pf-c-drawer__main">
+		<div class="pf-c-drawer__content">
+			<div class="pf-c-drawer__body">@MainContent</div>
+		</div>
+		<div class="pf-c-drawer__panel @DrawerPanelAdditionalCssClass" hidden="@(!Expanded)" aria-expanded="false">
+			@if (DrawerHeaderContent != null && ShowHeader)
+			{
+				<div class="pf-c-drawer__body">
+					<div class="pf-c-drawer__head">
+						@DrawerHeaderContent
+						@if (ShowClose)
+						{
+							<div class="pf-c-drawer__actions">
+								<div class="pf-c-drawer__close">
+									<button class="pf-c-button pf-m-plain" type="button" aria-label="Close drawer panel" @onclick="Close">
+										<i class="fas fa-times" aria-hidden="true"></i>
+									</button>
+								</div>
+							</div>
+						}
+					</div>
+				</div>
+			}
+			<div class="pf-c-drawer__body @(NoPadding ? CssClassConstants.NoPadding : String.Empty)">
+				@DrawerContent
+			</div>
+		</div>
+	</div>
+</div>
+
+@code {
+	[Parameter]
+	public RenderFragment MainContent { get; set; }
+
+	[Parameter]
+	public RenderFragment DrawerHeaderContent { get; set; }
+
+	[Parameter]
+	public RenderFragment DrawerContent { get; set; }
+
+	[Parameter]
+	public RenderFragment BeforeMain { get; set; }
+
+	[Parameter]
+	public bool ShowHeader { get; set; } = true;
+
+	[Parameter]
+	public bool Expanded { get; set; }
+
+	[Parameter]
+	public DrawerPosition DrawerPosition { get; set; } = DrawerPosition.Right;
+
+	[Parameter]
+	public bool Inline { get; set; }
+
+	[Parameter]
+	public EventCallback<bool> ExpandedChanged { get; set; }
+
+	[Parameter]
+	public bool NoPadding { get; set; }
+
+	[Parameter]
+	public bool ShowClose { get; set; } = true;
+
+	[Parameter]
+	public bool Resizable { get; set; }
+
+	[Parameter]
+	public string AdditionalCssClass { get; set; }
+
+	[Parameter]
+	public string DrawerPanelAdditionalCssClass { get; set; }
+
+	private async Task Close()
+	{
+		if (!Expanded) return;
+
+		Expanded = false;
+		await ExpandedChanged.InvokeAsync(Expanded);
+	}
+}

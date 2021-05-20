@@ -1,0 +1,46 @@
+﻿@inherits LayoutComponentBase
+
+<PFPage>
+	<HeaderTools>
+		<ContextSelector Label="Select Environment" Text="My project">
+			<ContextSelectorItem Title="My project" />
+			<ContextSelectorItem Title="OpenShift cluster" />
+			<ContextSelectorItem Title="Production Ansible" />
+			<ContextSelectorItem Title="AWS" />
+			<ContextSelectorItem Title="Azure" />
+			<ContextSelectorItem Title="My project 2" />
+		</ContextSelector>
+		<AppLauncher>
+			<AppLauncherGroup>
+				<AppLauncherButtonMenuItem Text="Hello world" />
+			</AppLauncherGroup>
+			<AppLauncherSeparator />
+			<AppLauncherGroup Title="Group 1">
+				<AppLauncherButtonMenuItem Text="Hello world 2" />
+				<AppLauncherLinkMenuItem Text="Hello world 3" Favorite="@hw3favorite" External="true" Href="https://news.bbc.co.uk" Target="_blank" IconUrl="/css/assets/images/pf-logo-small.svg" OnFavoriteClickCallback="@ToggleFavorite" />
+			</AppLauncherGroup>
+		</AppLauncher>
+		<div class="pf-c-page__header-tools-group">
+			<SearchInput TotalMatches="5" SelectedMatchText="Some example" EnableMatchNavigation="true" />
+		</div>
+	</HeaderTools>
+	<Sidebar>
+		<NavMenu />
+	</Sidebar>
+	<ChildContent>
+		@Body
+	</ChildContent>
+	<HeaderNav>
+		<TopNav />
+	</HeaderNav>
+</PFPage>
+
+@code {
+	bool hw3favorite = false;
+
+	private void ToggleFavorite(ComponentMouseEventArgs<AppLauncherLinkMenuItem> componentMouseEventArgs)
+	{
+		//componentMouseEventArgs.Component.SetFavorite(!(componentMouseEventArgs.Component.Favorite ?? false));
+		hw3favorite = !hw3favorite;
+	}
+}

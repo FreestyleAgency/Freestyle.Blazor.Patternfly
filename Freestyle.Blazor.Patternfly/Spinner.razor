@@ -1,0 +1,10 @@
+﻿<span class="pf-c-spinner @CssClassConstants.GetSizeCssClass(Size)" role="progressbar" aria-valuetext="Loading...">
+	<span class="pf-c-spinner__clipper"></span>
+	<span class="pf-c-spinner__lead-ball"></span>
+	<span class="pf-c-spinner__tail-ball"></span>
+</span>
+
+@code {
+	[Parameter]
+	public Size Size { get; set; }
+}

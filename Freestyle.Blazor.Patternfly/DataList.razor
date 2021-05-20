@@ -1,0 +1,18 @@
+﻿<ul class="pf-c-data-list @(Compact ? CssClassConstants.Compact : String.Empty)" role="list" @attributes="Attributes">
+	<CascadingValue Name="DataList" Value="this" IsFixed="true">
+		@ChildContent
+	</CascadingValue>
+</ul>
+
+@code {
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public bool Compact { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> Attributes { get; set; }
+
+	internal List<DataListItem> Items { get; set; } = new List<DataListItem>();
+}

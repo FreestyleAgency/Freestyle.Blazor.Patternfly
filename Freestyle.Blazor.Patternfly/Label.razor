@@ -1,0 +1,96 @@
+﻿@if (Visible)
+{
+	if (LabelGroup == null)
+	{
+		<span class="pf-c-label @(Outline ? CssClassConstants.Outline : String.Empty) @CssClassConstants.GetColourCssClass(Colour)" @attributes="AdditionalAttributes">
+			<span class="pf-c-label__content">
+				@if (!String.IsNullOrEmpty(IconCssClass))
+				{
+					<span class="pf-c-label__icon">
+						<i class="@IconCssClass" aria-hidden="true"></i>
+					</span>
+				}
+				@Text
+				@if (Removable && OnRemoveClick.HasDelegate)
+				{
+					<button class="pf-c-button pf-m-plain" type="button" aria-label="Remove" @onclick="OnRemoveClick">
+						<i class="fas fa-times" aria-hidden="true"></i>
+					</button>
+				}
+			</span>
+		</span>
+	}
+	else
+	{
+		<li class="pf-c-label-group__list-item">
+			<span class="pf-c-label @(Outline ? CssClassConstants.Outline : String.Empty) @CssClassConstants.GetColourCssClass(Colour)" @attributes="AdditionalAttributes">
+				<span class="pf-c-label__content">
+					@if (!String.IsNullOrEmpty(IconCssClass))
+					{
+						<span class="pf-c-label__icon">
+							<i class="@IconCssClass" aria-hidden="true"></i>
+						</span>
+					}
+					@Text
+					@if (Removable && OnRemoveClick.HasDelegate)
+					{
+						<button class="pf-c-button pf-m-plain" type="button" aria-label="Remove" @onclick="OnRemoveClick">
+							<i class="fas fa-times" aria-hidden="true"></i>
+						</button>
+					}
+				</span>
+			</span>
+		</li>
+	}
+}
+
+@code {
+	private bool _visible = true;
+
+	[Parameter]
+	public string IconCssClass { get; set; }
+
+	[Parameter]
+	public string Text { get; set; }
+
+	[Parameter]
+	public bool Outline { get; set; }
+
+	[Parameter]
+	public bool Removable { get; set; } = true;
+
+	[Parameter]
+	public NamedColour Colour { get; set; } = NamedColour.Default;
+
+	[Parameter]
+	public EventCallback<MouseEventArgs> OnRemoveClick { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+
+	[CascadingParameter(Name = "LabelGroup")]
+	protected LabelGroup LabelGroup { get; set; }
+
+	internal bool Visible
+	{
+		get { return _visible; }
+		set
+		{
+			if (value == _visible) return;
+
+			_visible = value;
+
+			StateHasChanged();
+		}
+	}
+
+	protected override Task OnInitializedAsync()
+	{
+		if (LabelGroup != null)
+		{
+			LabelGroup.AddLabel(this);
+		}
+
+		return base.OnInitializedAsync();
+	}
+}

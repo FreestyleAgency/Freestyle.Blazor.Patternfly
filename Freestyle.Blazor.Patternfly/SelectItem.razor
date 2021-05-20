@@ -1,0 +1,234 @@
+﻿@if (Visible)
+{
+	@if (Select.Mode == SelectMode.Checkbox)
+	{
+		<label class="pf-c-check pf-c-select__menu-item) @(Enabled ? String.Empty : CssClassConstants.Disabled)" for="@id">
+			<input class="pf-c-check__input" type="checkbox" id="@id" @bind-value="Selected"  disabled="@(!Enabled)" />
+			<span class="pf-c-check__label">
+				@if (String.IsNullOrEmpty(HighlightRegex))
+				{
+					@Title
+				}
+				else
+				{
+					@GetHighlightedTitle()
+				}
+			</span>
+			@if (!String.IsNullOrEmpty(Description))
+			{
+				<div class="pf-c-check__description">@Description</div>
+			}
+		</label>
+	}
+	else
+	{
+		<li class="pf-c-select__menu-wrapper @(Favorite ? CssClassConstants.Favorite : String.Empty) @(Enabled ? String.Empty : CssClassConstants.Disabled)" role="presentation">
+			<button class="pf-c-select__menu-item @(Selected ? CssClassConstants.Selected : String.Empty)" role="option" aria-selected="@Selected.ToString()" @onclick="HandleClicked" disabled="@(!Enabled)">
+				<span class="pf-c-select__menu-item-main">
+					@if (String.IsNullOrEmpty(HighlightRegex))
+					{
+						@Title
+					}
+					else
+					{
+						@GetHighlightedTitle()
+					}
+				</span>
+				@if (!String.IsNullOrEmpty(Description))
+				{
+					<span class="pf-c-select__menu-item-description">@Description</span>
+				}
+				@if (Selected)
+				{
+					<span class="pf-c-select__menu-item-icon">
+						<i class="fas fa-check" aria-hidden="true"></i>
+					</span>
+				}
+			</button>
+			@if (ShowFavouriteButton)
+			{
+				<button class="pf-c-select__menu-item pf-m-action pf-m-favorite-action" role="option" aria-label="@(Favorite ? "Starred" : "Not Starred")" @onclick="HandleFavoriteClicked" disabled="@(!Enabled)">
+					<span class="pf-c-select__menu-item-action-icon">
+						<i class="fas fa-star" aria-hidden="true"></i>
+					</span>
+				</button>
+			}
+		</li>
+	}
+}
+
+@code {
+	private string id = Guid.NewGuid().ToString();
+
+	private bool _visible = true;
+	private string _highlightRegex = null;
+	private bool _selected;
+	private bool _favorite;
+
+	[Parameter]
+	public string Title { get; set; }
+
+	[Parameter]
+	public string Description { get; set; }
+
+	[Parameter]
+	public bool Selected
+	{
+		get {
+			return _selected;
+		}
+		set
+		{
+			if (value == _selected) return;
+
+			_selected = value;
+
+			StateHasChanged();
+
+			if (SelectedChanged.HasDelegate)
+				SelectedChanged.InvokeAsync(value);
+
+			if (Select != null)
+				Select.ItemSelectedChanged(this);
+		}
+	}
+
+	[Parameter]
+	public EventCallback<bool> SelectedChanged { get; set; }
+
+	[Parameter]
+	public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+	[Parameter]
+	public bool ShowFavouriteButton { get; set; }
+
+	[Parameter]
+	public bool Favorite
+	{
+		get { return _favorite; }
+		set
+		{
+			if (value == _favorite) return;
+
+			_favorite = value;
+
+			StateHasChanged();
+
+			if (FavoriteChanged.HasDelegate)
+				FavoriteChanged.InvokeAsync(value);
+		}
+	}
+
+	[Parameter]
+	public EventCallback<bool> FavoriteChanged { get; set; }
+
+	[Parameter]
+	public bool FavoriteOnClick { get; set; }
+
+	[Parameter]
+	public EventCallback<MouseEventArgs> OnFavoriteClick { get; set; }
+
+	[Parameter]
+	public bool Enabled { get; set; } = true;
+
+	[CascadingParameter(Name = "Select")]
+	protected Select Select { get; set; }
+
+	[CascadingParameter(Name = "SelectGroup")]
+	protected SelectGroup SelectGroup { get; set; }
+
+	[Parameter]
+	public EventCallback OnDeselect { get; set; }
+
+	internal bool Visible
+	{
+		get { return _visible; }
+		set {
+			if (value == _visible) return;
+
+			_visible = value;
+
+			if (SelectGroup != null)
+				SelectGroup.UpdateVisibility();
+
+			StateHasChanged();
+		}
+	}
+
+	internal string HighlightRegex
+	{
+		get { return _highlightRegex; }
+		set
+		{
+			if (_highlightRegex == value) return;
+
+			_highlightRegex = value;
+
+			StateHasChanged();
+		}
+	}
+
+	protected override Task OnInitializedAsync()
+	{
+		if (SelectGroup != null)
+		{
+			SelectGroup.AddItem(this);
+		}
+
+		if (Select != null)
+		{
+			Select.AddItem(this);
+		}
+		else
+		{
+			throw new Exception("SelectItem must be within a Select or a SelectGroup (within a Select).");
+		}
+
+		return base.OnInitializedAsync();
+	}
+
+	private MarkupString GetHighlightedTitle()
+	{
+		return (MarkupString)System.Text.RegularExpressions.Regex.Replace(Title, HighlightRegex, "<mark class=\"pf-c-select__menu-item--match\">$0</mark>", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+	}
+
+	private async Task HandleClicked(MouseEventArgs mouseEventArgs)
+	{
+		if (OnClick.HasDelegate)
+			await OnClick.InvokeAsync(mouseEventArgs);
+
+		if (Select != null && Select.ManageSelection)
+		{
+			if (mouseEventArgs.Button == 0)
+			{
+				Selected = !Selected;
+			}
+		}
+
+		if (Select != null)
+			Select.ItemClicked(this);
+	}
+
+	private async Task HandleFavoriteClicked(MouseEventArgs mouseEventArgs)
+	{
+		if (OnFavoriteClick.HasDelegate)
+			await OnClick.InvokeAsync(mouseEventArgs);
+
+		if (FavoriteOnClick)
+		{
+			if (mouseEventArgs.Button == 0)
+			{
+				Favorite = !Favorite;
+			}
+		}
+	}
+
+	internal void Deselect()
+	{
+		if (Select != null && Select.ManageSelection)
+			Selected = false;
+		
+		if (OnDeselect.HasDelegate)
+			OnDeselect.InvokeAsync(null);
+	}
+}

@@ -1,0 +1,91 @@
+﻿<div class="pf-c-form__field-group @(Expandable ? CssClassConstants.Expandable : String.Empty) @(Expandable && Expanded ? CssClassConstants.Expanded : String.Empty)">
+	@if (Expandable)
+	{
+		<div class="pf-c-form__field-group-toggle">
+			<div class="pf-c-form__field-group-toggle-button">
+				<button class="pf-c-button pf-m-plain" type="button" aria-expanded="@Expanded.ToString()" aria-label="Details" id="@id-toggle" aria-labelledby="@id-title @id-toggle" @onclick="ToggleExpanded">
+					<span class="pf-c-form__field-group-toggle-icon">
+						<i class="fas fa-angle-right" aria-hidden="true"></i>
+					</span>
+				</button>
+			</div>
+		</div>
+	}
+	<div class="pf-c-form__field-group-header">
+		<div class="pf-c-form__field-group-header-main">
+			<div class="pf-c-form__field-group-header-title">
+				<div class="pf-c-form__field-group-header-title-text" id="@id-title">@Title</div>
+			</div>
+			@if (Description != null)
+			{
+				<div class="pf-c-form__field-group-header-description">@Description</div>
+			}
+		</div>
+		@if (HeaderActions != null)
+		{
+			<div class="pf-c-form__field-group-header-actions">
+				@HeaderActions
+			</div>
+		}
+	</div>
+	@if (!Expandable || Expanded)
+	{
+		<div class="pf-c-form__field-group-body">
+			@ChildContent
+		</div>
+	}
+</div>
+
+@code {
+	private string id = Guid.NewGuid().ToString();
+
+	private bool _expanded;
+
+	[Parameter]
+	public bool Expandable { get; set; }
+
+	[Parameter]
+	public bool Expanded
+	{
+		get { return _expanded; }
+		set
+		{
+			if (_expanded == value) return;
+
+			_expanded = value;
+
+			if (ExpandedChanged.HasDelegate)
+				ExpandedChanged.InvokeAsync(value);
+		}
+	}
+
+	[Parameter]
+	public EventCallback<bool> ExpandedChanged { get; set; }
+
+	[Parameter]
+	public string ShowMoreText { get; set; } = "Show more";
+
+	[Parameter]
+	public string ShowLessText { get; set; } = "Show less";
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public RenderFragment HeaderActions { get; set; }
+
+	[Parameter]
+	public RenderFragment Title { get; set; }
+
+	[Parameter]
+	public RenderFragment Description { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+
+	private void ToggleExpanded()
+	{
+		Expanded = !Expanded;
+		StateHasChanged();
+	}
+}

@@ -1,0 +1,167 @@
+﻿@inject IJSFunctions JSFunctions
+
+<div class="pf-c-search-input">
+	<span class="pf-c-search-input__text">
+		<span class="pf-c-search-input__icon">
+			<i class="fas fa-search fa-fw" aria-hidden="true"></i>
+		</span>
+		<input @ref="_inputRef" class="pf-c-search-input__text-input" type="text" placeholder="@Placeholder" aria-label="@Placeholder" @bind-value="DisplayText" @bind-value:event="oninput" @attributes="AdditionalAttributes" @onkeyup="OnKeyPress" />
+	</span>
+	@if (!String.IsNullOrWhiteSpace(QueryText))
+	{
+		<span class="pf-c-search-input__utilities">
+			@if (EnableMatchNavigation)
+			{
+				@if (TotalMatches > 0)
+				{
+					if (SelectedMatchIndex.HasValue)
+					{
+						<span class="pf-c-search-input__count">
+							<span class="pf-c-badge pf-m-read">@(SelectedMatchIndex + 1) / @TotalMatches</span>
+						</span>
+					}
+					else
+					{
+						<span class="pf-c-search-input__count">
+							<span class="pf-c-badge pf-m-read">@TotalMatches</span>
+						</span>
+					}
+					<span class="pf-c-search-input__nav">
+						<button class="pf-c-button pf-m-plain" type="button" disabled="@((SelectedMatchIndex ?? -1) <= 0)" aria-label="Previous" @onclick="() => SelectedMatchIndex = (SelectedMatchIndex ?? -1) - 1">
+							<i class="fas fa-angle-down fa-fw" aria-hidden="true"></i>
+						</button>
+						<button class="pf-c-button pf-m-plain" type="button" disabled="@(SelectedMatchIndex >= TotalMatches - 1)" aria-label="Next" @onclick="() => SelectedMatchIndex = (SelectedMatchIndex ?? -1) + 1">
+							<i class="fas fa-angle-up fa-fw" aria-hidden="true"></i>
+						</button>
+					</span>
+				}
+			}
+			else
+			{
+				@if (TotalMatches > 0)
+				{
+
+					<span class="pf-c-search-input__count">
+						<span class="pf-c-badge pf-m-read">@TotalMatches</span>
+					</span>
+				}
+			}
+			@if (!String.IsNullOrWhiteSpace(QueryText))
+			{
+				<span class="pf-c-search-input__clear">
+					<button class="pf-c-button pf-m-plain" type="button" aria-label="Clear" @onclick="() => QueryText = null">
+						<i class="fas fa-times fa-fw" aria-hidden="true"></i>
+					</button>
+				</span>
+			}
+		</span>
+	}
+</div>
+
+@code {
+	private string _queryText;
+	private int? _selectedMatchIndex;
+	private ElementReference _inputRef;
+
+	private string DisplayText
+	{
+		get
+		{
+			if (SelectedMatchIndex.HasValue)
+				return SelectedMatchText;
+
+			return _queryText;
+		}
+		set
+		{
+			QueryText = value;
+		}
+	}
+
+	[Parameter]
+	public string QueryText
+	{
+		get {
+			if (SelectedMatchIndex.HasValue)
+				return SelectedMatchText;
+
+			return _queryText;
+		}
+		set
+		{
+			if (value == _queryText) return;
+
+			_queryText = value;
+
+			if (QueryTextChanged.HasDelegate)
+				QueryTextChanged.InvokeAsync(value);
+
+			SelectedMatchIndex = null;
+			SelectedMatchText = null;
+		}
+	}
+
+	[Parameter]
+	public EventCallback<string> QueryTextChanged { get; set; }
+
+	[Parameter]
+	public string Placeholder { get; set; } = "Search";
+
+	[Parameter]
+	public int TotalMatches { get; set; }
+
+	[Parameter]
+	public bool EnableMatchNavigation { get; set; } = false;
+
+	[Parameter]
+	public int? SelectedMatchIndex
+	{
+		get { return _selectedMatchIndex; }
+		set
+		{
+			if (value == _selectedMatchIndex) return;
+
+			_selectedMatchIndex = value;
+
+			if (SelectedMatchIndexChanged.HasDelegate)
+				SelectedMatchIndexChanged.InvokeAsync(value);
+		}
+	}
+
+	[Parameter]
+	public EventCallback<int?> SelectedMatchIndexChanged { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+
+	[Parameter]
+	public string SelectedMatchText { get; set; }
+
+	private async Task OnKeyPress(KeyboardEventArgs e)
+	{
+		if (EnableMatchNavigation)
+		{
+			if (TotalMatches > 0)
+			{
+				if (e.Key == "ArrowDown")
+				{
+					if (SelectedMatchIndex > 0)
+					{
+						SelectedMatchIndex = SelectedMatchIndex - 1;
+						await JSFunctions.MoveCursorToEndAsync(_inputRef);
+						return;
+					}
+				}
+				else if (e.Key == "ArrowUp")
+				{
+					if ((SelectedMatchIndex ?? -1) < TotalMatches - 1)
+					{
+						SelectedMatchIndex = (SelectedMatchIndex ?? -1) + 1;
+						await JSFunctions.MoveCursorToEndAsync(_inputRef);
+						return;
+					}
+				}
+			}
+		}
+	}
+}

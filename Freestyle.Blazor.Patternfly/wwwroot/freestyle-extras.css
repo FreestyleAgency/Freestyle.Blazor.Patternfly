@@ -1,0 +1,79 @@
+﻿.pf-c-page__header-brand .pf-c-page__header-brand-toggle {
+	transition: opacity ease-out 0.5s;
+}
+
+.pf-c-page__header-brand .pf-c-page__header-brand-link {
+	transition: margin-left ease-out 0.5s, margin-right ease-out 0.5s;
+}
+
+.pf-c-page__header-brand.fspf-brand-toggle-hidden .pf-c-page__header-brand-toggle {
+	opacity: 0;
+}
+
+.pf-c-page__header-brand.fspf-brand-toggle-hidden .pf-c-page__header-brand-link {
+	margin-left: -45px;
+	margin-right: 45px;
+}
+
+.pf-c-page__header-nav {
+	padding-left: 0;
+}
+
+.pf-c-page__header .pf-c-context-selector__toggle::before {
+	border-top: none;
+	border-right: none;
+	border-left: none;
+}
+
+.pf-c-page__header .pf-c-search-input__text::before {
+	border: none;
+}
+
+.pf-c-tooltip {
+	z-index: 1000;
+}
+
+.fspf-u-overflow-auto {
+	overflow: auto;
+}
+
+.pf-c-dropdown__toggle.pf-m-split-button.pf-m-primary {
+	--pf-c-dropdown__toggle-button--Color: --pf-c-dropdown__toggle--m-primary--Color;
+}
+
+.pf-c-dropdown.pf-m-block {
+	display: block;
+}
+
+	.pf-c-dropdown.pf-m-block .pf-c-dropdown__toggle {
+		display: flex;
+	}
+
+	.pf-c-dropdown.pf-m-block button.pf-c-dropdown__toggle {
+		width: 100%;
+	}
+
+	.pf-c-dropdown.pf-m-block .pf-c-dropdown__toggle button:first-child {
+		flex-grow: 1;
+	}
+
+
+/* Fix for popover used with .pf-c-page, but positioned at end of body */
+.pf-c-popover {
+	z-index: 1000; 
+}
+
+/* Fix for content not overflowing (scrolling) in filled stack item */
+.pf-l-stack__item.pf-m-fill.fspf-u-overflow-auto {
+	flex: 1 1 auto;
+	overflow: auto;
+}
+
+/* Adds icon support to nav (nominally side nav) */
+.pf-c-nav__item .fspf-nav__item-icon {
+	display: inline-block;
+	margin-right: 1ex;
+	width: 1em;
+	height: 1em;
+	text-align: center;
+}

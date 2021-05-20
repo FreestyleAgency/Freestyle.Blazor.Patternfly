@@ -1,0 +1,295 @@
+﻿<div class="pf-c-wizard">
+	@if (!String.IsNullOrEmpty(Title) || (Description != null && Description.GetInvocationList().Any()))
+	{
+		<div class="pf-c-wizard__header">
+			@if (ShowClose)
+			{
+				<button class="pf-c-button pf-m-plain pf-c-wizard__close" type="button" aria-label="Close">
+					<i class="fas fa-times" aria-hidden="true"></i>
+				</button>
+			}
+			<h1 class="pf-c-title pf-m-3xl pf-c-wizard__title">@Title</h1>
+			<p class="pf-c-wizard__description">Here is where the description goes</p>
+		</div>
+	}
+	<button aria-label="Wizard Header Toggle" class="pf-c-wizard__toggle @(_expanded ? CssClassConstants.Expanded : String.Empty)" aria-expanded="@_expanded.ToString()" @onclick="() => { _expanded = !_expanded; StateHasChanged(); }">
+		<ol class="pf-c-wizard__toggle-list">
+			@{
+				var activeStep = _steps.FirstOrDefault(x => CurrentStepId == x.StepId || x.Children.Any(y => y.StepId == CurrentStepId));
+				var activeSubStep = activeStep == null ? null : (activeStep.StepId == CurrentStepId ? null : activeStep.Children.FirstOrDefault(x => CurrentStepId == x.StepId));
+				int activeStepNumber = activeStep == null ? 0 : _steps.Where(x => x.Visible).ToList().IndexOf(activeStep) + 1;
+			}
+			@if (activeStep != null)
+			{
+				<li class="pf-c-wizard__toggle-list-item">
+					<span class="pf-c-wizard__toggle-num">@activeStepNumber</span>@activeStep.Title
+					@if (activeSubStep != null)
+					{
+						<i class="fas fa-angle-right pf-c-wizard__toggle-separator" aria-hidden="true"></i>
+					}
+				</li>
+			}
+			@if (activeSubStep != null)
+			{
+				<li class="pf-c-wizard__toggle-list-item">@activeSubStep.Title</li>
+			}
+		</ol>
+		<span class="pf-c-wizard__toggle-icon">
+			<i class="fas fa-caret-down" aria-hidden="true"></i>
+		</span>
+	</button>
+	<div class="pf-c-wizard__outer-wrap">
+		<div class="pf-c-wizard__inner-wrap">
+			<nav class="pf-c-wizard__nav @(_expanded ? CssClassConstants.Expanded : String.Empty)" aria-label="Steps">
+				<ol class="pf-c-wizard__nav-list">
+					@foreach (var step in _steps)
+					{
+						<li class="pf-c-wizard__nav-item">
+							<button class="pf-c-wizard__nav-link @(CurrentStepId == step.StepId || step.Children.Any(x => x.StepId == CurrentStepId) ? CssClassConstants.Current : String.Empty)" disabled="@(!ShouldShowStepAsEnabled(step))" aria-current="@(CurrentStepId == step.StepId ? "step" : String.Empty)" @onclick="() => CurrentStepId = step.Children.Any() ? step.Children.FirstOrDefault(x => x.Visible && x.Enabled)?.StepId : step.StepId">@step.Title</button>
+							@if (step.Children.Where(x => x.Visible).Any())
+							{
+								<ol class="pf-c-wizard__nav-list">
+									@foreach (var child in step.Children.Where(x => x.Visible))
+									{
+										<li class="pf-c-wizard__nav-item">
+											<button class="pf-c-wizard__nav-link @(CurrentStepId == child.StepId ? CssClassConstants.Current : String.Empty)" disabled="@(!ShouldShowStepAsEnabled(child))" aria-current="@(CurrentStepId == child.StepId ? "step" : String.Empty)" @onclick="() => CurrentStepId = child.StepId">@child.Title</button>
+										</li>
+									}
+								</ol>
+							}
+						</li>
+					}
+				</ol>
+			</nav>
+			<main class="pf-c-wizard__main">
+				<div class="pf-c-wizard__main-body">
+					<CascadingValue Name="Wizard" Value="this" IsFixed="true">
+						@ChildContent
+					</CascadingValue>
+				</div>
+			</main>
+		</div>
+		<footer class="pf-c-wizard__footer">
+			@if (_currentStep != null)
+			{
+				@if (!CurrentStepIsLast)
+				{
+					<button class="pf-c-button pf-m-primary" type="submit" @onclick="OnNextClicked" disabled="@(!CurrentStepHasNext)">Next</button>
+				}
+				else
+				{
+					<button class="pf-c-button pf-m-primary" type="submit" @onclick="OnFinishClick">Finish</button>
+				}
+				if (!CurrentStepIsFirst)
+				{
+					<button class="pf-c-button pf-m-secondary" type="button" @onclick="OnBackClicked" disabled="@(!CurrentStepHasPrevious)">Back</button>
+				}
+			}
+			@if (ShowCancel)
+			{
+				<button class="pf-c-button pf-m-link" type="button" @onclick="OnCancelClick">Cancel</button>
+			}
+		</footer>
+	</div>
+</div>
+@code {
+	private string _currentStepId;
+	private WizardStep _currentStep;
+	private bool _expanded;
+
+	private bool CurrentStepIsFirst
+	{
+		get
+		{
+			return _currentStep == null || !_steps.Any() ? true : _steps.Where(x => x.Visible && x.Enabled).FirstOrDefault() == _currentStep || _steps.Where(x => x.Visible && x.Enabled).FirstOrDefault()?.Children.Where(x => x.Visible && x.Enabled).FirstOrDefault() == _currentStep;
+		}
+	}
+
+	private bool CurrentStepIsLast
+	{
+		get
+		{
+			return _currentStep == null || !_steps.Any() ? true : _steps.Where(x => x.Visible && x.Enabled).LastOrDefault() == _currentStep || _steps.Where(x => x.Visible && x.Enabled).LastOrDefault()?.Children.Where(x => x.Visible && x.Enabled).LastOrDefault() == _currentStep;
+		}
+	}
+
+	private bool CurrentStepHasNext
+	{
+		get
+		{
+			return !String.IsNullOrEmpty(_currentStep.NextStepId) && (Find(_currentStep.NextStepId)?.Enabled ?? false);
+		}
+	}
+
+	private bool CurrentStepHasPrevious
+	{
+		get
+		{
+			return !String.IsNullOrEmpty(_currentStep.PreviousStepId) && (Find(_currentStep.PreviousStepId)?.Enabled ?? false);
+		}
+	}
+
+	private List<WizardStep> _steps = new List<WizardStep>();
+
+	[Parameter]
+	public string CurrentStepId
+	{
+		get { return _currentStepId; }
+		set
+		{
+			if (_currentStepId == value) return;
+
+			_currentStepId = value;
+			_currentStep = Find(_currentStepId);
+
+			CurrentStepIdChanged.InvokeAsync(_currentStepId);
+			CurrentStepIdChangedInternal?.Invoke(this, EventArgs.Empty);
+
+			StateHasChanged();
+		}
+	}
+
+	[Parameter]
+	public EventCallback<string> CurrentStepIdChanged { get; set; }
+
+	internal event EventHandler CurrentStepIdChangedInternal;
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public bool ShowClose { get; set; }
+
+	[Parameter]
+	public bool ShowCancel { get; set; }
+
+	[Parameter]
+	public string Title { get; set; }
+
+	[Parameter]
+	public RenderFragment Description { get; set; }
+
+	[Parameter]
+	public bool ForceSequential { get; set; } = true;
+
+	[Parameter]
+	public EventCallback<MouseEventArgs> OnCancelClick { get; set; }
+
+	[Parameter]
+	public EventCallback<MouseEventArgs> OnFinishClick { get; set; }
+
+	internal void AddStep(WizardStep step)
+	{
+		_steps.Add(step);
+
+		if (CurrentStepId == null && step.Visible && step.Enabled)
+			CurrentStepId = step.StepId;
+
+		step.NextStepIdChanged += OnStepChanged;
+		step.PreviousStepIdChanged += OnStepChanged;
+
+		StateHasChanged();
+	}
+
+	internal void RemoveStep(WizardStep step)
+	{
+		step.NextStepIdChanged -= OnStepChanged;
+		step.PreviousStepIdChanged -= OnStepChanged;
+
+		_steps.Remove(step);
+
+		StateHasChanged();
+	}
+
+	internal void ChildStepAdded()
+	{
+		StateHasChanged();
+	}
+
+	private WizardStep Find(string stepId)
+	{
+		foreach (var child in _steps)
+		{
+			if (child.StepId == stepId) return child;
+
+			var childFindResult = child.Find(stepId);
+
+			if (childFindResult != null) return childFindResult;
+		}
+
+		return null;
+	}
+
+	internal bool CurrentStepIsBefore(WizardStep step)
+	{
+		var previous = GetPreviousTo(step);
+
+		return previous.Contains(_currentStep);
+	}
+
+	internal List<WizardStep> GetPreviousTo(WizardStep step)
+	{
+		List<WizardStep> previousSteps = new List<WizardStep>();
+		foreach (var s in _steps)
+		{
+			if (s == step) return previousSteps;
+
+			previousSteps.Add(s);
+
+			foreach (var c in s.Children)
+			{
+				if (c == step) return previousSteps;
+
+				previousSteps.Add(c);
+			}
+		}
+
+		throw new ArgumentException("Step not found.");
+	}
+
+	private bool ShouldShowStepAsEnabled(WizardStep step)
+	{
+		return step.Enabled && (!ForceSequential || !CurrentStepIsBefore(step));
+	}
+
+	private async Task OnNextClicked()
+	{
+		var currentStep = Find(CurrentStepId);
+		if (currentStep != null)
+		{
+			var shouldContinue = await currentStep.RaiseOnBeforeNavigateNext();
+
+			if (shouldContinue && currentStep.CanNavigateNext && !String.IsNullOrEmpty(currentStep.NextStepId))
+			{
+				CurrentStepId = currentStep.NextStepId;
+
+				await currentStep.RaiseOnAfterNavigateNext();
+
+				StateHasChanged();
+			}
+		}
+	}
+
+	private async Task OnBackClicked()
+	{
+		var currentStep = Find(CurrentStepId);
+		if (currentStep != null)
+		{
+			var shouldContinue = await currentStep.RaiseOnBeforeNavigatePrevious();
+
+			if (shouldContinue && currentStep.CanNavigatePrevious && !String.IsNullOrEmpty(currentStep.PreviousStepId))
+			{
+				CurrentStepId = currentStep.PreviousStepId;
+
+				await currentStep.RaiseOnAfterNavigatePrevious();
+
+				StateHasChanged();
+			}
+		}
+	}
+
+	private void OnStepChanged(object sender, EventArgs e)
+	{
+		StateHasChanged();
+	}
+}

@@ -1,0 +1,59 @@
+﻿@inject IJSFunctions JSFunctions
+
+<nav @ref="_navRef" class="pf-c-nav @(Dark ? CssClassConstants.Dark : String.Empty) @(Mode == NavMode.Horizontal ? CssClassConstants.Horizontal : String.Empty) @(Mode == NavMode.HorizontalTertiary ? CssClassConstants.Tertiary : String.Empty)" aria-label="@Label" @attributes="AdditionalAttributes">
+	@if (Mode == NavMode.Horizontal || Mode == NavMode.HorizontalTertiary)
+	{
+		<button class="pf-c-nav__scroll-button" disabled aria-label="Scroll left">
+			<i class="fas fa-angle-left" aria-hidden="true"></i>
+		</button>
+	}
+	<CascadingValue Name="Nav" Value="this" IsFixed="true">
+		@ChildContent
+	</CascadingValue>
+	@if (Mode == NavMode.Horizontal || Mode == NavMode.HorizontalTertiary)
+	{
+		<button class="pf-c-nav__scroll-button" disabled aria-label="Scroll right">
+			<i class="fas fa-angle-right" aria-hidden="true"></i>
+		</button>
+	}
+</nav>
+
+@code {
+	private ElementReference _navRef;
+	private List<NavItem> _children = new List<NavItem>();
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public string Label { get; set; } = "Global";
+
+	[Parameter]
+	public bool Dark { get; set; } = true;
+
+	[Parameter]
+	public NavMode Mode { get; set; } = NavMode.Vertical;
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+
+	internal List<NavItem> Children
+	{
+		get { return _children; }
+	}
+
+	internal void AddChild(NavItem item)
+	{
+		_children.Add(item);
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (Mode == NavMode.Horizontal || Mode == NavMode.HorizontalTertiary)
+		{
+			await JSFunctions.BindNavScrollerAsync(_navRef);
+		}
+
+		await base.OnAfterRenderAsync(firstRender);
+	}
+}

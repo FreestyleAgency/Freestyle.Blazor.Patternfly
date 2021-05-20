@@ -1,0 +1,64 @@
+﻿<div class="pf-c-tile @(Selected ? CssClassConstants.Selected : String.Empty) @(Enabled ? String.Empty : CssClassConstants.Disabled) @(Large ? CssClassConstants.DisplayLarge : String.Empty) @AdditionalCssClass" @attributes="AdditionalAttributes">
+	<div class="pf-c-tile__header @(Stacked ? CssClassConstants.Stacked : String.Empty)">
+		@if (Icon != null && Icon.GetInvocationList().Any())
+		{
+			<div class="pf-c-tile__icon">
+				@Icon
+			</div>
+		}
+		else if (!String.IsNullOrEmpty(IconCssClass))
+		{
+			<div class="pf-c-tile__icon">
+				<i class="@IconCssClass" aria-hidden="true"></i>
+			</div>
+		}
+		@if (!String.IsNullOrEmpty(Title))
+		{
+			<div class="pf-c-tile__title">@Title</div>
+		}
+	</div>
+	@if (ChildContent != null && ChildContent.GetInvocationList().Any())
+	{
+		<div class="pf-c-tile__body">@ChildContent</div>
+	}
+</div>
+
+@code {
+	private string id = Guid.NewGuid().ToString();
+
+	private bool _selected;
+	private bool _expanded;
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public string IconCssClass { get; set; }
+
+	[Parameter]
+	public string Title { get; set; }
+
+	[Parameter]
+	public RenderFragment Icon { get; set; }
+
+	[Parameter]
+	public bool Selectable { get; set; }
+
+	[Parameter]
+	public bool Selected { get; set; }
+
+	[Parameter]
+	public bool Enabled { get; set; } = true;
+
+	[Parameter]
+	public bool Stacked { get; set; }
+
+	[Parameter]
+	public bool Large { get; set; }
+
+	[Parameter]
+	public string AdditionalCssClass { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+}

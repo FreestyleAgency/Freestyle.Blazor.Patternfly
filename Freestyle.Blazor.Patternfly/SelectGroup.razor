@@ -1,0 +1,72 @@
+﻿<div class="pf-c-select__menu-group" hidden="@(!Visible)">
+	<div class="pf-c-select__menu-group-title" aria-hidden="true" id="@id-title">@Title</div>
+	@if (Select.Mode == SelectMode.Checkbox)
+	{
+		<fieldset class="pf-c-select__menu-fieldset" aria-label="Select input">
+			<CascadingValue Name="SelectGroup" Value="this" IsFixed="true">
+				@ChildContent
+			</CascadingValue>
+		</fieldset>
+	}
+	else
+	{
+		<ul role="listbox" aria-labelledby="@id-title">
+			<CascadingValue Name="SelectGroup" Value="this" IsFixed="true">
+				@ChildContent
+			</CascadingValue>
+		</ul>
+	}
+</div>
+
+@code {
+	private string id = Guid.NewGuid().ToString();
+
+	[Parameter]
+	public string Title { get; set; }
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[CascadingParameter(Name = "Select")]
+	protected Select Select { get; set; }
+
+	[Parameter]
+	public bool Visible { get; set; }
+
+	private List<SelectItem> Items { get; set; } = new List<SelectItem>();
+
+	protected override Task OnInitializedAsync()
+	{
+		if (Select != null)
+		{
+			Select.AddGroup(this);
+		}
+		else
+		{
+			throw new Exception("SelectGroup must be within a Select.");
+		}
+
+		return base.OnInitializedAsync();
+	}
+
+	protected override void OnParametersSet()
+	{
+		UpdateVisibility();
+
+		base.OnParametersSet();
+	}
+
+	internal void AddItem(SelectItem item)
+	{
+		Items.Add(item);
+
+		UpdateVisibility();
+
+		StateHasChanged();
+	}
+
+	internal void UpdateVisibility()
+	{
+		Visible = Items.Any(x => x.Visible);
+	}
+}

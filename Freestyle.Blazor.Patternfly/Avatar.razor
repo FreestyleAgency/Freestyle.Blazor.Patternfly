@@ -1,0 +1,12 @@
+﻿<img class="pf-c-avatar" src="@ImageUrl" alt="@AltText" @attributes="Attributes" />
+
+@code {
+	[Parameter]
+	public string ImageUrl { get; set; } = "/css/assets/images/img_avatar.svg";
+
+	[Parameter]
+	public string AltText { get; set; } = "Avatar image";
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> Attributes { get; set; }
+}

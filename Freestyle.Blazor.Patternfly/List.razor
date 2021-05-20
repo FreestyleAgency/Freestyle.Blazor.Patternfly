@@ -1,0 +1,29 @@
+﻿@if (Mode == ListMode.Inline)
+{
+	<ul class="pf-c-list pf-m-inline" @attributes="AdditionalAttributes">
+		@ChildContent
+	</ul>
+}
+else if (Mode == ListMode.Ordered)
+{
+	<ol class="pf-c-list" @attributes="AdditionalAttributes">
+		@ChildContent
+	</ol>
+}
+else if (Mode == ListMode.Unordered)
+{
+	<ul class="pf-c-list" @attributes="AdditionalAttributes">
+		@ChildContent
+	</ul>
+}
+
+@code {
+	[Parameter]
+	public ListMode Mode { get; set; }
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+}

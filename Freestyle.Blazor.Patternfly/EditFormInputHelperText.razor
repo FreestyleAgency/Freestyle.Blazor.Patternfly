@@ -1,0 +1,51 @@
+﻿@implements IDisposable
+@typeparam TValue
+
+@if (EditFormInput != null)
+{
+	@if (EditFormInput.ValueExpression != null && EditFormInput.HasValidationMessages)
+	{
+		<p id="@EditFormInput.Id-helper" class="pf-c-form__helper-text pf-m-error" aria-live="polite"><ValidationMessage For="EditFormInput.ValueExpression" /></p>
+	}
+	else if (!String.IsNullOrWhiteSpace(HelpText))
+	{
+		<p id="@EditFormInput.Id-helper" class="pf-c-form__helper-text @(EditFormInput.IsValid == true && !EditFormInput.HasValidationMessages ? CssClassConstants.Success : String.Empty)" aria-live="polite">@HelpText</p>
+	}
+}
+
+@code {
+	//[CascadingParameter(Name = "EditFormInput")]
+	[Parameter]
+	public EditFormInputBase<TValue> EditFormInput { get; set; }
+
+	[Parameter]
+	public string HelpText { get; set; }
+
+	protected override void OnParametersSet()
+	{
+		if (EditFormInput != null)
+		{
+			EditFormInput.AfterValidate += OnAfterValidate;
+		}
+
+		base.OnParametersSet();
+	}
+
+	private void OnAfterValidate(object sender, EventArgs e)
+	{
+		Update();
+	}
+
+	internal void Update()
+	{
+		StateHasChanged();
+	}
+
+	public void Dispose()
+	{
+		if (EditFormInput != null)
+		{
+			EditFormInput.AfterValidate -= OnAfterValidate;
+		}
+	}
+}

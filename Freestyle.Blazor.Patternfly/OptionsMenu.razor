@@ -1,0 +1,100 @@
+﻿<div class="pf-c-options-menu @(MenuAlignment == TopBottomVerticalAlignment.Top ? CssClassConstants.Top : String.Empty) @(Expanded ? CssClassConstants.Expanded : String.Empty) @(HorizontalAlignment == LeftRightHorizontalAlignment.Right ? CssClassConstants.AlignRight : String.Empty)" @onfocusout="OnFocusOut" @onmouseover="OnMouseOver" @onmouseout="OnMouseOut" @attributes="Attributes">
+	<button class="pf-c-options-menu__toggle @(Plain ? CssClassConstants.Plain : String.Empty) @(Plain ? CssClassConstants.Text : String.Empty) @(Enabled ? String.Empty : CssClassConstants.Disabled)" type="button" id="@_id-toggle" aria-haspopup="listbox" disabled="@(!Enabled)" aria-expanded="@(Expanded.ToString())" aria-label="@Text" @onclick="ToggleExpanded" @onclick:stopPropagation="true">
+		@if (ButtonContent == null)
+		{
+			<span class="pf-c-options-menu__toggle-text">@Text</span>
+		}
+		else
+		{
+			<span class="pf-c-options-menu__toggle-text">@ButtonContent</span>
+		}
+		<i class="fas fa-caret-down pf-c-options-menu__toggle-icon" aria-hidden="true"></i>
+	</button>
+	@if (HasGroups)
+	{
+		<div class="pf-c-options-menu__menu @(HorizontalAlignment == LeftRightHorizontalAlignment.Right ? CssClassConstants.AlignRight : String.Empty)" aria-labelledby="@_id-toggle" hidden="@(!Expanded)">
+			<CascadingValue Value="this" Name="OptionsMenu" IsFixed="true">
+				@ChildContent
+			</CascadingValue>
+		</div>
+	}
+	else
+	{
+		<ul class="pf-c-options-menu__menu @(HorizontalAlignment == LeftRightHorizontalAlignment.Right ? CssClassConstants.AlignRight : String.Empty)" aria-labelledby="@_id-toggle" hidden="@(!Expanded)">
+			<CascadingValue Value="this" Name="OptionsMenu" IsFixed="true">
+				@ChildContent
+			</CascadingValue>
+		</ul>
+	}
+</div>
+
+@code {
+	private string _id = Guid.NewGuid().ToString();
+	private bool _shouldClose = true;
+
+	public bool HasGroups { get; private set; }
+
+	[Parameter]
+	public bool Expanded { get; set; }
+
+	[Parameter]
+	public bool Enabled { get; set; } = true;
+
+	[Parameter]
+	public string Text { get; set; }
+
+	[Parameter]
+	public bool Plain { get; set; }
+
+	[Parameter]
+	public RenderFragment ButtonContent { get; set; }
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public LeftRightHorizontalAlignment HorizontalAlignment { get; set; } = LeftRightHorizontalAlignment.Left;
+
+	[Parameter]
+	public TopBottomVerticalAlignment MenuAlignment { get; set; } = TopBottomVerticalAlignment.Bottom;
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> Attributes { get; set; }
+
+	public void SetHasGroups()
+	{
+		HasGroups = true;
+		StateHasChanged();
+	}
+
+	public void Collapse()
+	{
+		Expanded = false;
+		StateHasChanged();
+	}
+
+	private void ToggleExpanded()
+	{
+		Expanded = !Expanded;
+		StateHasChanged();
+	}
+
+	private void OnMouseOver(MouseEventArgs mouseEventArgs)
+	{
+		_shouldClose = false;
+	}
+
+	private void OnMouseOut(MouseEventArgs mouseEventArgs)
+	{
+		_shouldClose = true;
+	}
+
+	private void OnFocusOut(FocusEventArgs focusEventArgs)
+	{
+		if (Expanded && _shouldClose)
+		{
+			Expanded = false;
+			StateHasChanged();
+		}
+	}
+}

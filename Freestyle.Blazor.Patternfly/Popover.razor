@@ -1,0 +1,146 @@
+﻿@implements IDisposable
+@inject IJSFunctions JSFunctions
+@inject IOutsideClickListener OutsideClickListener
+
+@if (Inline)
+{
+	<span @ref="elementRef">@ChildContent</span>
+}
+else
+{
+	<div @ref="elementRef">@ChildContent</div>
+}
+
+<div @ref="popoverRef" class="pf-c-popover @CssClassConstants.GetPlacementCssClass(Placement) @(AutoWidth ? CssClassConstants.WidthAuto : String.Empty)" role="dialog" aria-modal="true" aria-labelledby="@id-header" aria-describedby="@id-body" @attributes="AdditionalAttributes" hidden="@(!Visible)">
+	<div class="pf-c-popover__arrow"></div>
+	<div class="pf-c-popover__content">
+		@if (ShowClose)
+		{
+			<button class="pf-c-button pf-m-plain" type="button" aria-label="Close" @onclick="OnCloseClick">
+				<i class="fas fa-times" aria-hidden="true"></i>
+			</button>
+		}
+		@if (!String.IsNullOrEmpty(Title))
+		{
+			<h1 class="pf-c-title pf-m-md" id="@id-header">@Title</h1>
+		}
+		<div class="pf-c-popover__body" id="@id-body">@BodyContent</div>
+		@if (FooterContent != null)
+		{
+			<footer class="pf-c-popover__footer">@FooterContent</footer>
+		}
+	</div>
+</div>
+
+@code {
+	private string id = Guid.NewGuid().ToString();
+
+	private bool _visible;
+
+	private bool afterRender;
+	private bool shouldClose = true;
+	private bool rerunJs = true;
+	private ElementReference elementRef;
+	private ElementReference popoverRef;
+
+	[Parameter]
+	public bool Visible
+	{
+		get { return _visible; }
+		set
+		{
+			if (_visible == value) return;
+
+			_visible = value;
+
+			VisibleChanged.InvokeAsync(Visible).Wait();
+
+			rerunJs = true;
+		}
+	}
+
+	[Parameter]
+	public EventCallback<bool> VisibleChanged { get; set; }
+
+	[Parameter]
+	public RenderFragment BodyContent { get; set; }
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public RenderFragment FooterContent { get; set; }
+
+	[Parameter]
+	public string Title { get; set; }
+
+	[Parameter]
+	public Placement Placement { get; set; } = Placement.Top;
+
+	[Parameter]
+	public bool Inline { get; set; } = false;
+
+	[Parameter]
+	public bool AutoWidth { get; set; }
+
+	[Parameter]
+	public bool ShowClose { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+
+	protected override void OnInitialized()
+	{
+		OutsideClickListener.ClickOutside += (o, e) =>
+		{
+			if (Visible)
+			{
+				Hide().Wait();
+			}
+		};
+
+		base.OnInitialized();
+
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (Visible && rerunJs)
+		{
+			await OutsideClickListener.Register(popoverRef);
+
+			await JSFunctions.MoveToBodyEndAsync(popoverRef);
+			await JSFunctions.ShowPopperAsync(elementRef, popoverRef, Placement);
+
+			rerunJs = false;
+		}
+		else if (Visible)
+		{
+			await JSFunctions.UpdatePopperAsync(popoverRef);
+		}
+		else if (!Visible && rerunJs)
+		{
+			await OutsideClickListener.Unregister(popoverRef);
+		}
+
+		await base.OnAfterRenderAsync(firstRender);
+	}
+
+	private async Task OnCloseClick()
+	{
+		await Hide();
+		await JSFunctions.HidePopperAsync(elementRef);
+	}
+
+	private async Task Hide()
+	{
+		Visible = false;
+		StateHasChanged();
+	}
+
+	public void Dispose()
+	{
+		Hide();
+		JSFunctions.HidePopperAsync(elementRef);
+	}
+}

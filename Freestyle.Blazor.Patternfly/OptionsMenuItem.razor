@@ -1,0 +1,63 @@
+﻿<li>
+	<button class="pf-c-options-menu__menu-item" type="button" @onclick="OnClick" @attributes="Attributes" @onclick:stopPropagation="true">
+		@ChildContent
+		@if (Selected)
+		{
+			<i class="fas fa-check pf-c-options-menu__menu-item-icon" aria-hidden="true"></i>
+		}
+	</button>
+</li>
+
+@code {
+	[Parameter]
+	public EventCallback<MouseEventArgs> OnClickCallback { get; set; }
+
+	[CascadingParameter(Name = "OptionsMenu")]
+	public OptionsMenu OptionsMenu { get; set; }
+
+	[CascadingParameter(Name = "OptionsMenuGroup")]
+	public OptionsMenuGroup OptionsMenuGroup { get; set; }
+
+	[Parameter]
+	public bool CollapseOnClick { get; set; } = true;
+
+	[Parameter]
+	public bool Selected { get; set; }
+
+	[Parameter]
+	public EventCallback<bool> SelectedChanged { get; set; }
+
+	[Parameter]
+	public bool AutoToggleSelected { get; set; } = true;
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> Attributes { get; set; }
+
+	protected override void OnInitialized()
+	{
+		if (OptionsMenu.HasGroups && OptionsMenuGroup == null)
+			throw new Exception("All menu items must be within an OptionsMenuGroup if an OptionsMenu contains at least 1 group.");
+
+		base.OnInitialized();
+	}
+
+	private async Task OnClick(MouseEventArgs mouseEventArgs)
+	{
+		if (AutoToggleSelected)
+			await ToggleSelected();
+
+		await OnClickCallback.InvokeAsync(mouseEventArgs);
+
+		if (CollapseOnClick)
+			OptionsMenu.Collapse();
+	}
+
+	public async Task ToggleSelected()
+	{
+		Selected = !Selected;
+		await SelectedChanged.InvokeAsync(Selected);
+	}
+}

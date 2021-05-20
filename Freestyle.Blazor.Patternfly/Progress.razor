@@ -1,0 +1,71 @@
+﻿<div class="pf-c-progress @CssClassConstants.GetSizeCssClass(Size) @CssClassConstants.GetInsideOutsideCssClass(ProgressTextPosition) @CssClassConstants.GetImportanceCssClass(Importance)" id="@_id">
+	@if (!String.IsNullOrEmpty(Title))
+	{
+		<div class="pf-c-progress__description" id="@_id-description">@Title</div>
+	}
+	<div class="pf-c-progress__status" aria-hidden="true">
+		@if (ShowStatusText && ProgressTextPosition != InsideOutsidePosition.Inside)
+		{
+			<span class="pf-c-progress__measure">@ProgressDisplayText</span>
+		}
+		@if (ShowStatusIcon && Importance != Importance.Information)
+		{
+			<i class="fas @CssClassConstants.GetImportanceIconCssClass(Importance) pf-c-progress__status-icon"></i>
+		}
+	</div>
+	<div class="pf-c-progress__bar" role="progressbar" aria-valuemin="0" aria-valuemax="@MaxValue" aria-valuenow="@CurrentValue" aria-valuetext="@(MaxValue == 100 ? String.Empty : ProgressDisplayText)" aria-describedby="@_id-description">
+		<div class="pf-c-progress__indicator" style="width:@CurrentPercent%;">
+			@if (ShowStatusText && ProgressTextPosition == InsideOutsidePosition.Inside)
+			{
+				<span class="pf-c-progress__measure">@ProgressDisplayText</span>
+			}
+		</div>
+	</div>
+</div>
+
+@code {
+	private string _id = Guid.NewGuid().ToString();
+
+	private double CurrentPercent
+	{
+		get { return ((double)CurrentValue / MaxValue) * 100; }
+	}
+
+	private string ProgressDisplayText
+	{
+		get
+		{
+			if (!String.IsNullOrEmpty(ProgressText))
+				return ProgressText;
+			else
+				return $"{(int)CurrentPercent}%";
+		}
+	}
+
+	[Parameter]
+	public string Title { get; set; }
+
+	[Parameter]
+	public bool ShowStatusIcon { get; set; } = true;
+
+	[Parameter]
+	public bool ShowStatusText { get; set; } = true;
+
+	[Parameter]
+	public int CurrentValue { get; set; }
+
+	[Parameter]
+	public int MaxValue { get; set; } = 100;
+
+	[Parameter]
+	public string ProgressText { get; set; }
+
+	[Parameter]
+	public Size Size { get; set; } = Size.Default;
+
+	[Parameter]
+	public InsideOutsidePosition ProgressTextPosition { get; set; } = InsideOutsidePosition.Default;
+
+	[Parameter]
+	public Importance Importance { get; set; } = Importance.Information;
+}

@@ -1,0 +1,35 @@
+﻿<section class="pf-c-app-launcher__group">
+	@if (!String.IsNullOrEmpty(Title))
+	{
+		<h1 class="pf-c-app-launcher__group-title">@Title</h1>
+	}
+	<ul>
+		<CascadingValue Value="this" Name="AppLauncherGroup" IsFixed="true">
+			@ChildContent
+		</CascadingValue>
+	</ul>
+</section>
+
+@code {
+	[Parameter]
+	public string Title { get; set; }
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[CascadingParameter(Name = "AppLauncher")]
+	public AppLauncher AppLauncher { get; set; }
+
+	[CascadingParameter(Name = "AppLauncherGroup")]
+	public AppLauncherGroup ParentAppLauncherGroup { get; set; }
+
+	protected override void OnInitialized()
+	{
+		if (ParentAppLauncherGroup != null)
+			throw new Exception("AppLauncherGroups cannot be nested.");
+
+		AppLauncher.SetHasGroups();
+
+		base.OnInitialized();
+	}
+}

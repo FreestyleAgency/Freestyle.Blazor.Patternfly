@@ -1,0 +1,36 @@
+﻿@* Until a better solution is found for radio buttons in Blazor, name, value and checked properties must be handled outside this component *@
+<div class="pf-c-radio">
+	@if (RadioAlignment == LeftRightHorizontalAlignment.Left)
+	{
+		<input class="pf-c-radio__input" type="radio" id="@_id" @attributes="AdditionalAttributes" disabled="@(!Enabled)" />
+	}
+	<label class="pf-c-radio__label @(Enabled ? String.Empty : CssClassConstants.Disabled)" for="@_id">@Label</label>
+	@if (RadioAlignment == LeftRightHorizontalAlignment.Right)
+	{
+		<input class="pf-c-radio__input" type="radio" id="@_id" @attributes="AdditionalAttributes" disabled="@(!Enabled)" />
+	}
+	@if (!String.IsNullOrWhiteSpace(Description))
+	{
+		<div class="pf-c-radio__description">@Description</div>
+	}
+</div>
+
+@code {
+	private string _id = Guid.NewGuid().ToString();
+	private bool _checked;
+
+	[Parameter]
+	public string Label { get; set; }
+
+	[Parameter]
+	public string Description { get; set; }
+
+	[Parameter]
+	public LeftRightHorizontalAlignment RadioAlignment { get; set; } = LeftRightHorizontalAlignment.Left;
+
+	[Parameter]
+	public bool Enabled { get; set; } = true;
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+}

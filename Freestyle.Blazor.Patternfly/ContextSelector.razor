@@ -1,0 +1,189 @@
+﻿@implements IDisposable
+
+<div class="pf-c-context-selector @(Expanded ? CssClassConstants.Expanded : String.Empty)" @onfocusout="OnFocusOut" @onmouseover="OnMouseOver" @onmouseout="OnMouseOut">
+	@if (!String.IsNullOrEmpty(Label))
+	{
+		<span id="@id-label" hidden>@Label:</span>
+	}
+	<button class="pf-c-context-selector__toggle" id="@id-toggle" aria-labelledby="@id-label @id-toggle" @onclick="ToggleExpanded">
+		<span class="pf-c-context-selector__toggle-text">@Text</span>
+		<i class="fas fa-caret-down pf-c-context-selector__toggle-icon" aria-hidden="true"></i>
+	</button>
+	<div class="pf-c-context-selector__menu" hidden="@(!Expanded)">
+		@if (ShowFilter)
+		{
+			<div class="pf-c-context-selector__menu-search">
+				<div class="pf-c-input-group">
+					<input class="pf-c-form-control" type="search" placeholder="Search" id="@id-search-input" name="@id-search-input" aria-labelledby="@id-search-button" @bind-value="FilterValue" @bind-value:event="oninput" @onkeyup="OnKeyPress" />
+					<button class="pf-c-button pf-m-control" type="button" id="@id-search-button" aria-label="Search menu items" @onclick="FilterItems">
+						<i class="fas fa-search" aria-hidden="true"></i>
+					</button>
+				</div>
+			</div>
+		}
+		<ul>
+			<CascadingValue Name="ContextSelector" Value="this" IsFixed="true">
+				@ChildContent
+			</CascadingValue>
+		</ul>
+		@if (Footer != null)
+		{
+			<div class="pf-c-context-selector__menu-footer">
+				@Footer
+			</div>
+		}
+	</div>
+</div>
+
+@code {
+	private string id = Guid.NewGuid().ToString();
+	private bool shouldClose;
+	private List<ContextSelectorItem> items = new List<ContextSelectorItem>();
+	private bool filterHasMatches;
+
+	private string _filterValue;
+
+	[Parameter]
+	public bool Expanded { get; set; }
+
+	[Parameter]
+	public string Label { get; set; }
+
+	[Parameter]
+	public string Text { get; set; }
+
+	[Parameter]
+	public bool ShowFilter { get; set; }
+
+	[Parameter]
+	public RenderFragment Footer { get; set; }
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public string FilterValue
+	{
+		get { return _filterValue; }
+		set
+		{
+			if (value == _filterValue) return;
+
+			_filterValue = value;
+
+			if (FilterValueChanged.HasDelegate)
+				FilterValueChanged.InvokeAsync(value);
+
+			FilterItems(value);
+		}
+	}
+
+	[Parameter]
+	public EventCallback<string> FilterValueChanged { get; set; }
+
+	private void ToggleExpanded()
+	{
+		Expanded = !Expanded;
+
+		StateHasChanged();
+	}
+
+	private void OnMouseOver(MouseEventArgs mouseEventArgs)
+	{
+		shouldClose = false;
+	}
+
+	private void OnMouseOut(MouseEventArgs mouseEventArgs)
+	{
+		shouldClose = true;
+	}
+
+	private void OnFocusOut(FocusEventArgs focusEventArgs)
+	{
+		if (Expanded && shouldClose)
+		{
+			Expanded = false;
+			StateHasChanged();
+		}
+	}
+
+	private void OnKeyPress(KeyboardEventArgs keyboardEventArgs)
+	{
+		switch (keyboardEventArgs.Key)
+		{
+			case "Enter":
+				FilterItems();
+				break;
+			case "Escape":
+				Expanded = false;
+				FilterValue = null;
+				StateHasChanged();
+				break;
+		}
+	}
+
+	private void FilterItems()
+	{
+		FilterItems(System.Text.RegularExpressions.Regex.Escape(FilterValue));
+	}
+
+	private void FilterItems(string regex)
+	{
+		if (string.IsNullOrEmpty(regex))
+		{
+			foreach (var item in items)
+			{
+				item.Visible = true;
+				item.HighlightRegex = regex;
+
+				filterHasMatches = true;
+			}
+		}
+		else
+		{
+			filterHasMatches = false;
+
+			foreach (var item in items)
+			{
+				item.Visible = System.Text.RegularExpressions.Regex.IsMatch(item.Title, regex);
+				item.HighlightRegex = regex;
+
+				filterHasMatches = filterHasMatches | item.Visible;
+			}
+		}
+
+		StateHasChanged();
+	}
+
+	public void Collapse()
+	{
+		if (!Expanded) return;
+
+		Expanded = false;
+		StateHasChanged();
+	}
+
+	protected override Task OnInitializedAsync()
+	{
+		DocumentEvents.OnEscapeKeyPressed += OnEscapePressedHandler;
+
+		return base.OnInitializedAsync();
+	}
+
+	private void OnEscapePressedHandler(object sender, EventArgs eventArgs)
+	{
+		Collapse();
+	}
+
+	public void Dispose()
+	{
+		DocumentEvents.OnEscapeKeyPressed -= OnEscapePressedHandler;
+	}
+
+	internal void AddItem(ContextSelectorItem item)
+	{
+		items.Add(item);
+
+		StateHasChanged();
+	}
+}

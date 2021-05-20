@@ -1,0 +1,15 @@
+﻿<div class="pf-c-data-list__item-row">
+	<div class="pf-c-data-list__item-content">
+		@ChildContent
+	</div>
+</div>
+
+@code {
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	protected override void OnInitialized()
+	{
+		base.OnInitialized();
+	}
+}

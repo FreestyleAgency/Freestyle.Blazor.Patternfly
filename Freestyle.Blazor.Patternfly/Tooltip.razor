@@ -1,0 +1,93 @@
+﻿@inject IJSFunctions JSFunctions;
+
+@if (ChildContent != null)
+{
+	@if (Inline)
+	{
+		<span @ref="elementRef" @onmouseover="Show" @onmouseout="Hide">
+			@ChildContent
+		</span>
+	}
+	else
+	{
+		<div @ref="elementRef" @onmouseover="Show" @onmouseout="Hide">
+			@ChildContent
+		</div>
+	}
+}
+<div @ref="tooltipRef" id="@_id" class="pf-c-tooltip @CssClassConstants.GetPlacementCssClass(Placement)" role="tooltip" hidden="@(!_visible)">
+	<div class="pf-c-tooltip__content">@Text</div>
+	<div class="pf-c-tooltip__arrow"></div>
+</div>
+
+@code {
+	private bool _visible;
+	private string _id = Guid.NewGuid().ToString();
+
+	private ElementReference elementRef;
+	private ElementReference tooltipRef;
+
+	[Parameter]
+	public string Text { get; set; }
+
+	[Parameter]
+	public Placement Placement { get; set; } = Placement.Top;
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public ElementReference Element
+	{
+		set { elementRef = value; }
+	}
+
+	[Parameter]
+	public bool Visible
+	{
+		get => _visible;
+		set
+		{
+			if (_visible == value) return;
+
+			_visible = value;
+
+			if (value)
+			{
+				JSFunctions.ShowPopperAsync(elementRef, tooltipRef, Placement);
+			}
+			else
+			{
+				JSFunctions.HidePopperAsync(elementRef);
+			}
+
+			VisibleChanged.InvokeAsync(value);
+		}
+	}
+
+	[Parameter]
+	public bool Inline { get; set; } = false;
+
+	[Parameter]
+	public EventCallback<bool> VisibleChanged { get; set; }
+
+	private void Show()
+	{
+		Visible = true;
+	}
+
+	private void Hide()
+	{
+		Visible = false;
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (Visible)
+		{
+			await JSFunctions.MoveToBodyEndAsync(tooltipRef);
+		}
+
+		await base.OnAfterRenderAsync(firstRender);
+	}
+}

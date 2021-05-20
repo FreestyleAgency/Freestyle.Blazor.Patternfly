@@ -1,0 +1,116 @@
+﻿@inject IJSFunctions JSFunctions
+@inject IOutsideClickListener OutsideClickListener
+
+@if (Visible)
+{
+	<div @ref="_backdropRef" class="pf-c-backdrop">
+		<div @ref="_bullseyeRef" class="pf-l-bullseye">
+			<div @ref="_modalRef" class="pf-c-about-modal-box" role="dialog" aria-modal="true" aria-labelledby="about-modal-title" @attributes="Attributes">
+				<div class="pf-c-about-modal-box__brand">
+					<img class="pf-c-about-modal-box__brand-image" src="@LogoImageUrl" alt="PatternFly brand logo" />
+				</div>
+				<div class="pf-c-about-modal-box__close">
+					<button class="pf-c-button pf-m-plain" type="button" aria-label="Close dialog" @onclick="OnCloseClick">
+						<i class="fas fa-times" aria-hidden="true"></i>
+					</button>
+				</div>
+				<div class="pf-c-about-modal-box__header">
+					<h1 class="pf-c-title pf-m-4xl" id="about-modal-title">@ProductName</h1>
+				</div>
+				<div class="pf-c-about-modal-box__hero"></div>
+				<div class="pf-c-about-modal-box__content">
+					<div class="pf-c-about-modal-box__body">@ChildContent</div>
+					<p class="pf-c-about-modal-box__strapline">@FooterText</p>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+@code {
+	private ElementReference _backdropRef;
+	private ElementReference _modalRef;
+	private ElementReference _bullseyeRef;
+	private bool _visible;
+
+	[Parameter]
+	public bool Visible
+	{
+		get { return _visible; }
+		set
+		{
+			if (_visible == value) return;
+
+			_visible = value;
+
+			VisibleChanged.InvokeAsync(_visible);
+
+			if (_visible)
+			{
+				JSFunctions.MoveToBodyEndAsync(_backdropRef);
+				JSFunctions.AddBodyClassAsync("pf-c-backdrop__open");
+			}
+			else
+			{
+				JSFunctions.RemoveBodyClassAsync("pf-c-backdrop__open");
+			}
+		}
+	}
+
+	[Parameter]
+	public EventCallback<bool> VisibleChanged { get; set; }
+
+	[Parameter]
+	public string LogoImageUrl { get; set; } = "/css/assets/images/pf_mini_logo_white.svg";
+
+	[Parameter]
+	public string ProductName { get; set; } = "Product name";
+
+	[Parameter]
+	public string FooterText { get; set; } = "Trademark and copyright information here";
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public bool CloseOnBackdropClick { get; set; } = true;
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> Attributes { get; set; }
+
+	protected override void OnInitialized()
+	{
+		OutsideClickListener.ClickOutside += (o, e) =>
+		{
+			if (Visible && CloseOnBackdropClick)
+			{
+				Hide();
+			}
+		};
+
+		base.OnInitialized();
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (Visible)
+		{
+			await JSFunctions.MoveToBodyEndAsync(_backdropRef);
+
+			OutsideClickListener.Register(_modalRef, _bullseyeRef);
+		}
+
+		await base.OnAfterRenderAsync(firstRender);
+	}
+
+	private void OnCloseClick()
+	{
+		Hide();
+	}
+
+	private void Hide()
+	{
+		Visible = false;
+		StateHasChanged();
+	}
+}

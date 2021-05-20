@@ -1,0 +1,53 @@
+﻿@if (Visible)
+{
+	<li class="pf-c-alert-group__item">
+		<Alert Inline="false" Importance="Importance" Title="@Title" IconCssClass="@IconCssClass" ShowCloseButton="ShowCloseButton" @attributes="AdditionalAttributes" @bind-Visible="Visible">
+			<ChildContent>@ChildContent</ChildContent>
+			<Actions>@Actions</Actions>
+		</Alert>
+	</li>
+}
+	
+@code {
+	private bool _visible = true;
+
+	[Parameter]
+	public bool Visible
+	{
+		get { return _visible; }
+		set
+		{
+			if (_visible == value) return;
+
+			_visible = value;
+
+			VisibleChanged.InvokeAsync(value);
+
+			StateHasChanged();
+		}
+	}
+
+	[Parameter]
+	public EventCallback<bool> VisibleChanged { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+
+	[Parameter]
+	public Importance Importance { get; set; }
+
+	[Parameter]
+	public string Title { get; set; } = "Alert title";
+
+	[Parameter]
+	public string IconCssClass { get; set; }
+
+	[Parameter]
+	public bool ShowCloseButton { get; set; } = true;
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public RenderFragment Actions { get; set; }
+}

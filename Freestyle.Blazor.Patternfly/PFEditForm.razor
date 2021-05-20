@@ -1,0 +1,79 @@
+﻿<EditForm @ref="_editFormRef" novalidate class="@($"{CssClass} {(LimitWidth ? CssClassConstants.LimitWidth : String.Empty)} @{AdditionalCssClass}")" @attributes="AdditionalAttributes" Model="Model" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="OnInvalidSubmit">
+	<CascadingValue Name="PFEditForm" Value="this" IsFixed="true">
+		@ChildContent
+	</CascadingValue>
+</EditForm>
+
+@code {
+	private EditForm _editFormRef;
+	private List<Button> buttons = new List<Button>();
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public bool Horizontal { get; set; }
+
+	[Parameter]
+	public object Model { get; set; }
+
+	[Parameter]
+	public bool AddClass { get; set; } = true;
+
+	[Parameter]
+	public bool LimitWidth { get; set; }
+
+	[Parameter]
+	public string AdditionalCssClass { get; set; }
+
+	[Parameter]
+	public EventCallback<EditContext> OnValidSubmit { get; set; }
+
+	[Parameter]
+	public EventCallback<EditContext> OnInvalidSubmit { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+
+	private string CssClass
+	{
+		get
+		{
+			return AddClass ? "pf-c-form " + (Horizontal ? CssClassConstants.Horizontal : String.Empty) : String.Empty;
+		}
+	}
+
+	public EditContext EditContext
+	{
+		get {
+			return _editFormRef.EditContext;
+		}
+	}
+
+	internal void AddButton(Button button)
+	{
+		buttons.Add(button);
+	}
+
+	private async Task HandleInvalidSubmit(EditContext editContext)
+	{
+		Console.WriteLine(nameof(HandleValidSubmit));
+
+		if (OnInvalidSubmit.HasDelegate)
+			await OnInvalidSubmit.InvokeAsync(editContext);
+	}
+
+	private async Task HandleValidSubmit(EditContext editContext)
+	{
+		Console.WriteLine(nameof(HandleValidSubmit));
+
+		foreach (var button in buttons)
+			button.SetLoadingState(true);
+
+		if (OnValidSubmit.HasDelegate)
+			await OnValidSubmit.InvokeAsync(editContext);
+
+		foreach (var button in buttons)
+			button.SetLoadingState(false);
+	}
+}

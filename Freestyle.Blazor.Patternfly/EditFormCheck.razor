@@ -1,0 +1,34 @@
+﻿@inherits EditFormInputBase<bool>
+
+<div class="pf-c-check">
+	@if (CheckAlignment == LeftRightHorizontalAlignment.Left)
+	{
+		<input class="@CssClass pf-c-check__input @AdditionalCssClass" type="checkbox" id="@Id" @attributes="AdditionalAttributes" disabled="@(!Enabled)" @bind="CurrentValue" />
+	}
+	<label class="pf-c-check__label @(Enabled ? String.Empty : CssClassConstants.Disabled)" for="@Id">@Label</label>
+	@if (CheckAlignment == LeftRightHorizontalAlignment.Right)
+	{
+		<input class="@CssClass pf-c-check__input @AdditionalCssClass" type="checkbox" id="@Id" @attributes="AdditionalAttributes" disabled="@(!Enabled)" @bind="CurrentValue" />
+	}
+	@if (!String.IsNullOrWhiteSpace(Description))
+	{
+		<div class="pf-c-check__description">@Description</div>
+	}
+</div>
+
+@code {
+	[Parameter]
+	public string Label { get; set; }
+
+	[Parameter]
+	public string Description { get; set; }
+
+	[Parameter]
+	public LeftRightHorizontalAlignment CheckAlignment { get; set; } = LeftRightHorizontalAlignment.Left;
+
+	protected override bool TryParseValueFromString(string value, out bool result, out string validationErrorMessage)
+	{
+		validationErrorMessage = null;
+		return bool.TryParse(value, out result);
+	}
+}

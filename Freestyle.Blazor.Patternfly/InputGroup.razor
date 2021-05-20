@@ -1,0 +1,13 @@
+﻿<div class="pf-c-input-group" @attributes="AdditionalAttributes">
+	<CascadingValue Name="InInputGroup" Value="true" IsFixed="true">
+		@ChildContent
+	</CascadingValue>
+</div>
+
+@code {
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+}

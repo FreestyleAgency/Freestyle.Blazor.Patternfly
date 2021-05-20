@@ -1,0 +1,71 @@
+﻿<div class="pf-c-slider" style="--pf-c-slider--value: 62.5%;">
+  <div class="pf-c-slider__main">
+    <div class="pf-c-slider__rail">
+      <div class="pf-c-slider__rail-track"></div>
+    </div>
+    <div class="pf-c-slider__steps" aria-hidden="true">
+      <div class="pf-c-slider__step pf-m-active" style="--pf-c-slider__step--Left: 0%;">
+        <div class="pf-c-slider__step-tick"></div>
+        <div class="pf-c-slider__step-label">0</div>
+      </div>
+      <div class="pf-c-slider__step pf-m-active" style="--pf-c-slider__step--Left: 12.5%;">
+        <div class="pf-c-slider__step-tick"></div>
+      </div>
+      <div class="pf-c-slider__step pf-m-active" style="--pf-c-slider__step--Left: 25%;">
+        <div class="pf-c-slider__step-tick"></div>
+        <div class="pf-c-slider__step-label">2</div>
+      </div>
+      <div class="pf-c-slider__step pf-m-active" style="--pf-c-slider__step--Left: 37.5%;">
+        <div class="pf-c-slider__step-tick"></div>
+      </div>
+      <div class="pf-c-slider__step pf-m-active" style="--pf-c-slider__step--Left: 50%;">
+        <div class="pf-c-slider__step-tick"></div>
+        <div class="pf-c-slider__step-label">4</div>
+      </div>
+      <div class="pf-c-slider__step pf-m-active" style="--pf-c-slider__step--Left: 62.5%;">
+        <div class="pf-c-slider__step-tick"></div>
+      </div>
+      <div class="pf-c-slider__step" style="--pf-c-slider__step--Left: 75%;">
+        <div class="pf-c-slider__step-tick"></div>
+        <div class="pf-c-slider__step-label">6</div>
+      </div>
+      <div class="pf-c-slider__step" style="--pf-c-slider__step--Left: 87.5%;">
+        <div class="pf-c-slider__step-tick"></div>
+      </div>
+      <div class="pf-c-slider__step" style="--pf-c-slider__step--Left: 100%;">
+        <div class="pf-c-slider__step-tick"></div>
+        <div class="pf-c-slider__step-label">8</div>
+      </div>
+    </div>
+    <div class="pf-c-slider__thumb" tabindex="0" role="slider" aria-valuemin="0" aria-valuemax="8" aria-valuenow="5" aria-label="Value"></div>
+  </div>
+</div>
+
+@code {
+    private int _value;
+
+    [Parameter]
+    public int MinValue { get; set; } = 0;
+
+    [Parameter]
+    public int MaxValue { get; set; } = 100;
+
+    [Parameter]
+    public int Value
+    {
+        get { return _value;  }
+        set
+        {
+            if (value == value) return;
+
+            _value = value;
+
+            ValueChanged.InvokeAsync(value);
+        }
+    }
+
+    [Parameter]
+    public EventCallback<int> ValueChanged { get; set; }
+
+
+}

@@ -1,0 +1,89 @@
+﻿<nav class="pf-c-app-launcher @(Expanded ? CssClassConstants.Expanded : String.Empty) @(MenuAlignTop ? CssClassConstants.Top : String.Empty)" aria-label="@AriaLabel" @onfocusout="OnFocusOut" @onmouseover="OnMouseOver" @onmouseout="OnMouseOut" @attributes="Attributes">
+	<button class="pf-c-app-launcher__toggle" id="@(_controlId)-button" type="button" aria-expanded="@Expanded" aria-label="@ButtonAriaLabel" disabled="@(!Enabled)" @onclick="OnButtonClick">
+		<i class="fas fa-th" aria-hidden="true"></i>
+	</button>
+	@if (HasGroups)
+	{
+		<div class="pf-c-app-launcher__menu @(Align == LeftRightHorizontalAlignment.Right ? CssClassConstants.AlignRight : String.Empty)" aria-labelledby="@(_controlId)-button" hidden="@(!Expanded)">
+			<CascadingValue Value="this" Name="AppLauncher" IsFixed="true">
+				@ChildContent
+			</CascadingValue>
+		</div>
+	}
+	else
+	{
+		<ul class="pf-c-app-launcher__menu @(Align == LeftRightHorizontalAlignment.Right ? CssClassConstants.AlignRight : String.Empty)" aria-labelledby="@(_controlId)-button" hidden="@(!Expanded)">
+			<CascadingValue Value="this" Name="AppLauncher" IsFixed="true">
+				@ChildContent
+			</CascadingValue>
+		</ul>
+	}
+</nav>
+
+@code {
+	private string _controlId = Guid.NewGuid().ToString();
+	private bool _shouldClose = true;
+
+	public bool HasGroups { get; private set; }
+
+	[Parameter]
+	public bool Expanded { get; set; }
+
+	[Parameter]
+	public bool Enabled { get; set; } = true;
+
+	[Parameter]
+	public string AriaLabel { get; set; } = "Application launcher";
+
+	[Parameter]
+	public string ButtonAriaLabel { get; set; } = "Application launcher";
+
+	[Parameter]
+	public bool MenuAlignTop { get; set; }
+
+	[Parameter]
+	public LeftRightHorizontalAlignment Align { get; set; } = LeftRightHorizontalAlignment.Left;
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> Attributes { get; set; }
+
+	public void SetHasGroups()
+	{
+		HasGroups = true;
+		StateHasChanged();
+	}
+
+	public void Collapse()
+	{
+		Expanded = false;
+		StateHasChanged();
+	}
+
+	private void OnButtonClick(MouseEventArgs mouseEventArgs)
+	{
+		Expanded = !Expanded;
+		StateHasChanged();
+	}
+
+	private void OnMouseOver(MouseEventArgs mouseEventArgs)
+	{
+		_shouldClose = false;
+	}
+
+	private void OnMouseOut(MouseEventArgs mouseEventArgs)
+	{
+		_shouldClose = true;
+	}
+
+	private void OnFocusOut(FocusEventArgs focusEventArgs)
+	{
+		if (Expanded && _shouldClose)
+		{
+			Expanded = false;
+			StateHasChanged();
+		}
+	}
+}

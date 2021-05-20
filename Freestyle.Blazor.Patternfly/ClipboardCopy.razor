@@ -1,0 +1,74 @@
+﻿@inject IJSFunctions JSFunctions
+
+<div class="pf-c-clipboard-copy @(Expandable && _expanded ? CssClassConstants.Expanded : String.Empty)" @attributes="AdditionalAttributes">
+	<div class="pf-c-clipboard-copy__group">
+		@if (Expandable)
+		{
+			<button class="pf-c-button pf-m-control @(Expandable && _expanded ? CssClassConstants.Expanded : String.Empty)" aria-label="Show content" type="button" aria-expanded="true" id="@_id-toggle" aria-labelledby="@_id-toggle @_id-text-input" aria-controls="@_id-content" @onclick="ToggleExpansion">
+				<div class="pf-c-clipboard-copy__toggle-icon">
+					<i class="fas fa-angle-right" aria-hidden="true"></i>
+				</div>
+			</button>
+		}
+		<input @ref="_inputRef" class="pf-c-form-control" type="text" @bind-value="Text" id="@_id-text-input" aria-label="Copyable input" readonly="@(ReadOnly || (Expandable && _expanded))" />
+		<button @ref="_copyButtonRef" class="pf-c-button pf-m-control" aria-label="Copy to clipboard" type="button" id="@_id-copy-button" aria-labelledby="@_id-copy-button @_id-text-input" @onclick="CopyToClipboard">
+			<i class="fas fa-copy"></i>
+		</button>
+		<Tooltip Element="@_copyButtonRef" Text="Copied to clipboard" Visible="@_copied" Placement="Placement.Bottom" />
+	</div>
+	@if (Expandable)
+	{
+		<div @ref="_contentEditableRef" class="pf-c-clipboard-copy__expandable-content" contenteditable="true" id="@_id-content" hidden="@(!_expanded)" @onkeyup="SyncInput" @onpaste="SyncInput">@_contentEditableText</div>
+	}
+</div>
+
+@code {
+	private string _id = Guid.NewGuid().ToString();
+	private string _contentEditableText;
+	private bool _expanded;
+	private ElementReference _copyButtonRef;
+	private ElementReference _inputRef;
+	private ElementReference _contentEditableRef;
+	private bool _copied;
+
+	[Parameter]
+	public bool Expandable { get; set; }
+
+	[Parameter]
+	public bool ReadOnly { get; set; }
+
+	[Parameter]
+	public string Text { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+
+	protected override void OnInitialized()
+	{
+		base.OnInitialized();
+	}
+
+	private async void CopyToClipboard(MouseEventArgs mouseEventArgs)
+	{
+		await JSFunctions.ClipboardWriteTextAsync(Text);
+		_copied = true;
+
+		StateHasChanged();
+	}
+
+	private void ToggleExpansion(MouseEventArgs mouseEventArgs)
+	{
+		_expanded = !_expanded;
+		if (_expanded) _contentEditableText = Text;
+
+		StateHasChanged();
+	}
+
+	private async void SyncInput()
+	{
+		string value = await JSFunctions.GetContentEditableInnerHtmlAsync(_contentEditableRef);
+		Text = value;
+
+		StateHasChanged();
+	}
+}

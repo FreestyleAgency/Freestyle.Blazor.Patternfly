@@ -1,0 +1,98 @@
+﻿@implements IDisposable
+
+<section class="pf-c-notification-drawer__group @(Expanded ? CssClassConstants.Expanded : String.Empty)">
+	<h1>
+		<button class="pf-c-notification-drawer__group-toggle" aria-expanded="false" @onclick="Toggle">
+			<div class="pf-c-notification-drawer__group-toggle-title">@Title</div>
+			@{ 
+				var unreadCount = items.Count(x => !x.Read);
+			}
+			@if (unreadCount > 0)
+			{
+				<div class="pf-c-notification-drawer__group-toggle-count">
+					<span class="pf-c-badge pf-m-unread">@unreadCount</span>
+				</div>
+			}
+			<span class="pf-c-notification-drawer__group-toggle-icon">
+				<i class="fas fa-angle-right" aria-hidden="true"></i>
+			</span>
+		</button>
+	</h1>
+	<ul class="pf-c-notification-drawer__list" hidden="@(!Expanded)">
+		<CascadingValue Name="NotificationDrawerGroup" Value="this" IsFixed="true">
+			@ChildContent
+		</CascadingValue>
+	</ul>
+</section>
+
+@code {
+	private List<NotificationDrawerItem> items = new List<NotificationDrawerItem>();
+
+	private bool _expanded;
+
+	[Parameter]
+	public bool Expanded
+	{
+		get { return _expanded; }
+		set
+		{
+			if (_expanded == value) return;
+
+			_expanded = value;
+
+			if (ExpandedChanged.HasDelegate)
+				ExpandedChanged.InvokeAsync(value);
+		}
+	}
+
+	[Parameter]
+	public EventCallback<bool> ExpandedChanged { get; set; }
+
+	[Parameter]
+	public string Title { get; set; }
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[CascadingParameter(Name = "NotificationDrawer")]
+	protected NotificationDrawer NotificationDrawer { get; set; }
+
+	protected override void OnInitialized()
+	{
+		if (NotificationDrawer == null)
+			throw new InvalidOperationException("NotificationDrawerGroup must be nested in a NotificationDrawer component.");
+
+		NotificationDrawer.AddGroup(this);
+
+		base.OnInitialized();
+	}
+
+	internal void AddItem(NotificationDrawerItem item)
+	{
+		items.Add(item);
+
+		StateHasChanged();
+	}
+
+	internal void RemoveItem(NotificationDrawerItem item)
+	{
+		items.Remove(item);
+
+		StateHasChanged();
+	}
+
+	public void Update()
+	{
+		StateHasChanged();
+	}
+
+	private void Toggle()
+	{
+		Expanded = !Expanded;
+	}
+
+	public void Dispose()
+	{
+		NotificationDrawer.RemoveGroup(this);
+	}
+}

@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+	<TargetFramework>net5.0</TargetFramework>
+    <RootNamespace>Freestyle.Blazor.Patternfly.Test.BlazorServer_webassembly_tests.Server</RootNamespace>
+    <AssemblyName>$(AssemblyName.Replace(' ', '_'))</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="5.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Client\Freestyle.Blazor.Patternfly.Test.BlazorWebAssembly.Client.csproj" />
+    <ProjectReference Include="..\Shared\Freestyle.Blazor.Patternfly.Test.BlazorWebAssembly.Shared.csproj" />
+  </ItemGroup>
+
+
+</Project>

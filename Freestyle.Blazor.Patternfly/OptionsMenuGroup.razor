@@ -1,0 +1,35 @@
+﻿<section class="pf-c-options-menu__group">
+	@if (!String.IsNullOrEmpty(Title))
+	{
+		<h1 class="pf-c-options-menu__group-title">@Title</h1>
+	}
+	<ul>
+		<CascadingValue Value="this" Name="OptionsMenuGroup" IsFixed="true">
+			@ChildContent
+		</CascadingValue>
+	</ul>
+</section>
+
+@code {
+	[Parameter]
+	public string Title { get; set; }
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[CascadingParameter(Name = "OptionsMenu")]
+	public OptionsMenu OptionsMenu { get; set; }
+
+	[CascadingParameter(Name = "OptionsMenuGroup")]
+	public OptionsMenuGroup ParentOptionsMenuGroup { get; set; }
+
+	protected override void OnInitialized()
+	{
+		if (ParentOptionsMenuGroup != null)
+			throw new Exception("OptionsMenuGroups cannot be nested.");
+
+		OptionsMenu.SetHasGroups();
+
+		base.OnInitialized();
+	}
+}

@@ -1,0 +1,42 @@
+﻿<div class="pf-c-empty-state @CssClassConstants.GetSizeCssClass(Size)" @attributes="AdditionalAttributes">
+	<div class="pf-c-empty-state__content">
+		<i class="@IconCssClass pf-c-empty-state__icon" aria-hidden="true"></i>
+		<h1 class="pf-c-title @(Size == Size.ExtraLarge ? "pf-m-4xl" : "pf-m-lg")">@Title</h1>
+		<div class="pf-c-empty-state__body">@ChildContent</div>
+		@if (PrimaryAction != null)
+		{
+			<div class="pf-c-empty-state__primary">
+				@PrimaryAction
+			</div>
+		}
+		@if (SecondaryActions != null)
+		{
+			<div class="pf-c-empty-state__secondary">
+				@SecondaryActions
+			</div>
+		}
+	</div>
+</div>
+
+@code {
+	[Parameter]
+	public string IconCssClass { get; set; } = "fas fa-cubes";
+
+	[Parameter]
+	public string Title { get; set; } = "No items to display";
+
+	[Parameter]
+	public Size Size { get; set; }
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public RenderFragment PrimaryAction { get; set; }
+
+	[Parameter]
+	public RenderFragment SecondaryActions { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+}

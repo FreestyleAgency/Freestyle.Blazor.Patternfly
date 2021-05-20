@@ -1,0 +1,22 @@
+﻿@inherits EditFormInputBase<string>
+
+<textarea id="@Id" class="@CssClass pf-c-form-control @(IsValid == true  && !HasValidationMessages ? CssClassConstants.Success : String.Empty) @AdditionalCssClass" required="@Required" disabled="@(!Enabled)" @bind="CurrentValue" @attributes="AdditionalAttributes" aria-invalid="@(HasValidationMessages.ToString().ToLower())" aria-describedby="@Id-helper" @onblur="OnBlur" />
+
+@code { 
+	protected override bool TryParseValueFromString(string value, out string result, out string validationErrorMessage)
+	{
+		validationErrorMessage = null;
+		result = value;
+
+		return true;
+	}
+
+	private void OnBlur()
+	{
+		EditContext.NotifyFieldChanged(FieldIdentifier);
+
+		IsValid = !HasValidationMessages;
+		OnAfterValidate();
+		StateHasChanged();
+	}
+}

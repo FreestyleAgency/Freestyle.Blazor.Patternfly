@@ -1,0 +1,86 @@
+﻿@if (Visible)
+{
+	<li>
+		<button class="pf-c-context-selector__menu-list-item" @onclick="HandleClicked">
+			@if (String.IsNullOrEmpty(HighlightRegex))
+			{
+				@Title
+			}
+			else
+			{
+				@GetHighlightedTitle()
+			}
+		</button>
+	</li>
+}
+
+@code {
+	private string id = Guid.NewGuid().ToString();
+
+	private bool _visible = true;
+	private string _highlightRegex = null;
+	private bool _selected;
+	private bool _favorite;
+
+	[Parameter]
+	public string Title { get; set; }
+
+	[Parameter]
+	public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+	[CascadingParameter(Name = "ContextSelector")]
+	protected ContextSelector ContextSelector { get; set; }
+
+	internal bool Visible
+	{
+		get { return _visible; }
+		set
+		{
+			if (value == _visible) return;
+
+			_visible = value;
+
+			StateHasChanged();
+		}
+	}
+
+	internal string HighlightRegex
+	{
+		get { return _highlightRegex; }
+		set
+		{
+			if (_highlightRegex == value) return;
+
+			_highlightRegex = value;
+
+			StateHasChanged();
+		}
+	}
+
+	protected override Task OnInitializedAsync()
+	{
+		if (ContextSelector != null)
+		{
+			ContextSelector.AddItem(this);
+		}
+		else
+		{
+			throw new Exception("ContextSelectorItem must be within a ContextSelector.");
+		}
+
+		return base.OnInitializedAsync();
+	}
+
+	private MarkupString GetHighlightedTitle()
+	{
+		return (MarkupString)System.Text.RegularExpressions.Regex.Replace(Title, HighlightRegex, "<mark class=\"pf-c-select__menu-item--match\">$0</mark>");
+	}
+
+	private async Task HandleClicked(MouseEventArgs mouseEventArgs)
+	{
+		if (OnClick.HasDelegate)
+			await OnClick.InvokeAsync(mouseEventArgs);
+
+		ContextSelector.Collapse();
+	}
+}

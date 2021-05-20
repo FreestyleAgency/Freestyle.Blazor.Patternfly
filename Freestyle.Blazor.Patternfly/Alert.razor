@@ -1,0 +1,123 @@
+﻿@if (_visible)
+{
+	<div class="pf-c-alert @_cssClassAlertType @(Inline ? CssClassConstants.Inline : String.Empty)" aria-label="@_ariaLabel" @attributes="AdditionalAttributes">
+		<div class="pf-c-alert__icon">
+			<i class="@(IconCssClass ?? _cssClassDefaultIcon)" aria-hidden="true"></i>
+		</div>
+		<h4 class="pf-c-alert__title">
+			<span class="pf-screen-reader">@(_type.ToString()) alert:</span>@Title
+		</h4>
+		@if (ChildContent != null)
+		{
+			<div class="pf-c-alert__description">@ChildContent</div>
+		}
+		@if (ShowCloseButton)
+		{
+			<div class="pf-c-alert__action">
+				<button class="pf-c-button pf-m-plain" type="button" aria-label="Close @(_type.ToString()) alert: @Title" @onclick="OnCloseClick">
+					<i class="fas fa-times" aria-hidden="true"></i>
+				</button>
+			</div>
+		}
+		@if (Actions != null && Actions.GetInvocationList().Any())
+		{
+			<div class="pf-c-alert__action-group">@Actions</div>
+		}
+	</div>
+}
+
+@code {
+	private bool _visible = true;
+
+	private string _cssClassAlertType = String.Empty;
+	private string _cssClassDefaultIcon = "fas fa-bell";
+
+	private string _ariaLabel = $"{Importance.Default.ToString()} alert";
+	private string _titleHeadingLevel = "h4";
+
+	private Importance _type = Importance.Default;
+
+	[Parameter]
+	public Importance Importance
+	{
+		get { return _type; }
+		set
+		{
+			_type = value;
+
+			switch (_type)
+			{
+				case Importance.Default:
+					_cssClassAlertType = "pf-m-default";
+					_cssClassDefaultIcon = "fas fa-bell";
+					break;
+				case Importance.Information:
+					_cssClassAlertType = "pf-m-info";
+					_cssClassDefaultIcon = "fas fa-info-circle";
+					break;
+				case Importance.Success:
+					_cssClassAlertType = "pf-m-success";
+					_cssClassDefaultIcon = "fas fa-check-circle";
+					break;
+				case Importance.Warning:
+					_cssClassAlertType = "pf-m-warning";
+					_cssClassDefaultIcon = "fas fa-exclamation-triangle";
+					break;
+				case Importance.Danger:
+					_cssClassAlertType = "pf-m-danger";
+					_cssClassDefaultIcon = "fas fa-exclamation-circle";
+					break;
+			}
+
+			_ariaLabel = $"{_type.ToString()} alert";
+		}
+	}
+
+	[Parameter]
+	public bool Inline { get; set; } = true;
+
+	[Parameter]
+	public bool Visible
+	{
+		get { return _visible; }
+		set
+		{
+			if (_visible == value) return;
+
+			_visible = value;
+
+			VisibleChanged.InvokeAsync(value);
+
+			StateHasChanged();
+		}
+	}
+
+	[Parameter]
+	public EventCallback<bool> VisibleChanged { get; set; }
+
+	[Parameter]
+	public string Title { get; set; } = "Alert title";
+
+	[Parameter]
+	public string IconCssClass { get; set; }
+
+	[Parameter]
+	public bool ShowCloseButton { get; set; }
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public RenderFragment Actions { get; set; }
+
+	[CascadingParameter(Name = "AlertGroup")]
+	private AlertGroup AlertGroup { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+
+	private void OnCloseClick(MouseEventArgs e)
+	{
+		Visible = false;
+	}
+}

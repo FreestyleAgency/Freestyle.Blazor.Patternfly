@@ -1,0 +1,17 @@
+﻿<div class="pf-c-toolbar__group @CssClassConstants.GetToolbarGroupTypeCssClass(Type) @AdditionalCssClass" @attributes="AdditionalAttributes">
+	@ChildContent
+</div>
+
+@code {
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public string AdditionalCssClass { get; set; }
+
+	[Parameter]
+	public ToolbarGroupType Type { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+}

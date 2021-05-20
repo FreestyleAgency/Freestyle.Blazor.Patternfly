@@ -1,0 +1,16 @@
+﻿@if (!AppLauncher.HasGroups || AppLauncherGroup != null)
+{
+	<li class="pf-c-app-launcher__separator" role="separator"></li>
+}
+else
+{
+	<hr class="pf-c-app-launcher__separator" />
+}
+
+@code {
+	[CascadingParameter(Name = "AppLauncher")]
+	public AppLauncher AppLauncher { get; set; }
+
+	[CascadingParameter(Name = "AppLauncherGroup")]
+	public AppLauncherGroup AppLauncherGroup { get; set; }
+}

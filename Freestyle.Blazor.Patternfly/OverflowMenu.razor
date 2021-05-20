@@ -1,0 +1,13 @@
+﻿<div class="pf-c-overflow-menu" id="overflow-menu-simple" @attributes="Attributes">
+	<div class="pf-c-overflow-menu__control">
+		@ChildContent
+	</div>
+</div>
+
+@code {
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> Attributes { get; set; }
+}

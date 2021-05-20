@@ -1,0 +1,16 @@
+﻿@if (!Dropdown.HasGroups || DropdownGroup != null)
+{
+	<li class="pf-c-divider" role="separator"></li>
+}
+else
+{
+	<hr class="pf-c-divider" />
+}
+
+@code {
+	[CascadingParameter(Name = "Dropdown")]
+	public Dropdown Dropdown { get; set; }
+
+	[CascadingParameter(Name = "DropdownGroup")]
+	public DropdownGroup DropdownGroup { get; set; }
+}

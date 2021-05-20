@@ -1,0 +1,244 @@
+﻿<li class="pf-c-nav__item @(Expandable ? CssClassConstants.Expandable : String.Empty) @(Expanded ? CssClassConstants.Expanded : String.Empty) @((ChildCurrent && !Expanded) ? CssClassConstants.Current : String.Empty)" @attributes="AdditionalAttributes">
+	<a id="@_id" href="@Href" class="pf-c-nav__link @(Current ? CssClassConstants.Current : String.Empty)" aria-expanded="@((Expandable && Expanded).ToString())" @onclick="@OnClickInternal" @onclick:preventDefault="@(Href == "#")" aria-current="@(Current ? "page" : null)">
+		@if (!String.IsNullOrEmpty(IconCssClass))
+		{
+			<i class="fspf-nav__item-icon @IconCssClass" aria-hidden="true"></i>
+		}
+		@Text
+		@if (Expandable)
+		{
+			<span class="pf-c-nav__toggle">
+				<span class="pf-c-nav__toggle-icon">
+					<i class="fas fa-angle-right" aria-hidden="true"></i>
+				</span>
+			</span>
+		}
+	</a>
+	@if (ChildContent != null)
+	{
+		<section class="pf-c-nav__subnav" aria-labelledby="@_id" hidden="@(Expandable && !Expanded)">
+			<ul class="pf-c-nav__simple-list">
+				<CascadingValue Name="ParentNavItem" Value="this" IsFixed="true">
+					@ChildContent
+				</CascadingValue>
+			</ul>
+		</section>
+	}
+</li>
+
+@code {
+	private string? _hrefAbsolute;
+
+	private Guid _id = Guid.NewGuid();
+	private bool _current = false;
+	private List<NavItem> _children = new List<NavItem>();
+
+	[Parameter]
+	public string Text { get; set; }
+
+	[Parameter]
+	public string IconCssClass { get; set; }
+
+	[Parameter]
+	public bool Expandable { get; set; }
+
+	[Parameter]
+	public bool Expanded { get; set; }
+
+	[Parameter]
+	public bool Current
+	{
+		get { return _current; }
+		set
+		{
+			if (_current == value) return;
+
+			_current = value;
+
+			if (_current && Nav != null)
+			{
+				//Unset all others
+				foreach (var child in Nav.Children)
+				{
+					if (child != this)
+					{
+						child.Current = false;
+					}
+				}
+			}
+
+			if (ParentNavItem != null)
+				ParentNavItem.StateHasChanged();
+			else
+				StateHasChanged();
+		}
+	}
+
+	[Parameter]
+	public string Href { get; set; } = "#";
+
+	public bool ChildCurrent {
+		get
+		{
+			return _children.Any(x => x.Current);
+		}
+	}
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public bool SetCurrentOnClick { get; set; }
+
+	/// <summary>
+	/// Gets or sets a value representing the URL matching behavior.
+	/// </summary>
+	[Parameter]
+	public NavLinkMatch Match { get; set; }
+
+	[Parameter]
+	public EventHandler<MouseEventArgs> OnClick { get; set; }
+
+	[CascadingParameter(Name = "Nav")]
+	public Nav Nav { get; set; }
+
+	[CascadingParameter(Name = "ParentNavItem")]
+	public NavItem ParentNavItem { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+
+	[Inject]
+	private NavigationManager NavigationManger { get; set; } = default!;
+
+	private void AddChild(NavItem item)
+	{
+		_children.Add(item);
+	}
+
+	private void OnClickInternal(MouseEventArgs mouseEventArgs)
+	{
+		if (Expandable)
+		{
+			Expanded = !Expanded;
+			StateHasChanged();
+		}
+
+		if (SetCurrentOnClick)
+		{
+			Current = true;
+		}
+
+		OnClick?.Invoke(this, mouseEventArgs);
+	}
+
+	protected override void OnInitialized()
+	{
+		if (Nav == null)
+			throw new InvalidOperationException("NavItem must be nested in a Nav component.");
+
+		Nav.AddChild(this);
+
+		if (ParentNavItem != null)
+			ParentNavItem.AddChild(this);
+
+		// We'll consider re-rendering on each location change
+		NavigationManger.LocationChanged += OnLocationChanged;
+
+		base.OnInitialized();
+	}
+
+	protected override void OnParametersSet()
+	{
+		_hrefAbsolute = Href == null ? null : NavigationManger.ToAbsoluteUri(Href).AbsoluteUri;
+
+		if (!SetCurrentOnClick)
+		{
+			Current = ShouldMatch(NavigationManger.Uri);
+		}
+	}
+
+	private void OnLocationChanged(object? sender, LocationChangedEventArgs args)
+	{
+		if (!SetCurrentOnClick)
+		{
+			// We could just re-render always, but for this component we know the
+			// only relevant state change is to the _isActive property.
+			var shouldBeActiveNow = ShouldMatch(args.Location);
+			if (shouldBeActiveNow != Current)
+			{
+				Current = shouldBeActiveNow;
+			}
+		}
+	}
+
+	private bool ShouldMatch(string currentUriAbsolute)
+	{
+		if (_hrefAbsolute == null)
+		{
+			return false;
+		}
+
+		if (EqualsHrefExactlyOrIfTrailingSlashAdded(currentUriAbsolute))
+		{
+			return true;
+		}
+
+		if (Match == NavLinkMatch.Prefix
+			&& IsStrictlyPrefixWithSeparator(currentUriAbsolute, _hrefAbsolute))
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	private bool EqualsHrefExactlyOrIfTrailingSlashAdded(string currentUriAbsolute)
+	{
+		if (string.Equals(currentUriAbsolute, _hrefAbsolute, StringComparison.OrdinalIgnoreCase))
+		{
+			return true;
+		}
+
+		if (currentUriAbsolute.Length == _hrefAbsolute.Length - 1)
+		{
+			// Special case: highlight links to http://host/path/ even if you're
+			// at http://host/path (with no trailing slash)
+			//
+			// This is because the router accepts an absolute URI value of "same
+			// as base URI but without trailing slash" as equivalent to "base URI",
+			// which in turn is because it's common for servers to return the same page
+			// for http://host/vdir as they do for host://host/vdir/ as it's no
+			// good to display a blank page in that case.
+			if (_hrefAbsolute[_hrefAbsolute.Length - 1] == '/'
+				&& _hrefAbsolute.StartsWith(currentUriAbsolute, StringComparison.OrdinalIgnoreCase))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private static bool IsStrictlyPrefixWithSeparator(string value, string prefix)
+	{
+		var prefixLength = prefix.Length;
+		if (value.Length > prefixLength)
+		{
+			return value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+				&& (
+					// Only match when there's a separator character either at the end of the
+					// prefix or right after it.
+					// Example: "/abc" is treated as a prefix of "/abc/def" but not "/abcdef"
+					// Example: "/abc/" is treated as a prefix of "/abc/def" but not "/abcdef"
+					prefixLength == 0
+					|| !char.IsLetterOrDigit(prefix[prefixLength - 1])
+					|| !char.IsLetterOrDigit(value[prefixLength])
+				);
+		}
+		else
+		{
+			return false;
+		}
+	}
+}

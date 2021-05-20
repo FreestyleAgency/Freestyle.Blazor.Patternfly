@@ -1,0 +1,8 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	<TargetFramework>net5.0</TargetFramework>
+    <RootNamespace>Freestyle.Blazor.Patternfly.Test.BlazorServer_webassembly_tests.Shared</RootNamespace>
+  </PropertyGroup>
+
+</Project>

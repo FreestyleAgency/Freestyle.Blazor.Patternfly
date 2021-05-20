@@ -1,0 +1,201 @@
+﻿@implements IDisposable
+
+<div hidden="@(!(Current || ChildCurrent))">
+	<CascadingValue Name="ParentStep" Value="this" IsFixed="true">
+		@ChildContent
+	</CascadingValue>
+</div>
+
+@code {
+	private List<WizardStep> _childSteps = new List<WizardStep>();
+	private string _nextStepId;
+	private string _previousStepId;
+
+	[Parameter]
+	public string StepId { get; set; }
+
+	[Parameter]
+	public string Title { get; set; }
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[CascadingParameter(Name = "Wizard")]
+	public Wizard Wizard { get; set; }
+
+	[CascadingParameter(Name = "ParentStep")]
+	public WizardStep ParentStep { get; set; }
+
+	[Parameter]
+	public bool CanNavigateNext { get; set; } = true;
+
+	[Parameter]
+	public EventCallback<CancellableActionEventArgs> OnBeforeNavigateNext { get; set; }
+
+	[Parameter]
+	public EventCallback OnAfterNavigateNext { get; set; }
+
+	[Parameter]
+	public bool CanNavigatePrevious { get; set; } = true;
+
+	[Parameter]
+	public EventCallback<CancellableActionEventArgs> OnBeforeNavigatePrevious { get; set; }
+
+	[Parameter]
+	public EventCallback OnAfterNavigatePrevious { get; set; }
+
+	[Parameter]
+	public string NextStepId
+	{
+		get { return _nextStepId; }
+		set
+		{
+			if (_nextStepId == value) return;
+
+			_nextStepId = value;
+
+			NextStepIdChanged?.Invoke(this, EventArgs.Empty);
+		}
+	}
+
+	[Parameter]
+	public string PreviousStepId
+	{
+		get { return _previousStepId; }
+		set
+		{
+			if (_previousStepId == value) return;
+
+			_previousStepId = value;
+
+			PreviousStepIdChanged?.Invoke(this, EventArgs.Empty);
+		}
+	}
+
+	[Parameter]
+	public bool Visible { get; set; } = true;
+
+	[Parameter]
+	public bool Enabled { get; set; } = true;
+
+	public bool Current
+	{
+		get
+		{
+			return Wizard.CurrentStepId == StepId;
+		}
+	}
+
+	public bool ChildCurrent
+	{
+		get
+		{
+			return Children.Any(x => Wizard.CurrentStepId == x.StepId);
+		}
+	}
+
+	internal event EventHandler NextStepIdChanged;
+	internal event EventHandler PreviousStepIdChanged;
+
+	internal IEnumerable<WizardStep> Children
+	{
+		get { return _childSteps; }
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		if (Wizard == null) throw new ArgumentNullException(nameof(Wizard), "A WizardStep should only be used inside a Wizard.");
+
+		if (ParentStep != null)
+		{
+			ParentStep.AddChild(this);
+			Wizard.CurrentStepIdChangedInternal += OnCurrentStepChanged;
+		}
+		else
+		{
+			Wizard.AddStep(this);
+			Wizard.CurrentStepIdChangedInternal += OnCurrentStepChanged;
+		}
+
+		await base.OnInitializedAsync();
+	}
+
+	protected void AddChild(WizardStep step)
+	{
+		_childSteps.Add(step);
+
+		step.PreviousStepIdChanged += PreviousStepIdChanged;
+		step.NextStepIdChanged += NextStepIdChanged;
+
+		Wizard.ChildStepAdded();
+	}
+
+	protected void RemoveChild(WizardStep step)
+	{
+		step.PreviousStepIdChanged -= PreviousStepIdChanged;
+		step.NextStepIdChanged -= NextStepIdChanged;
+
+		_childSteps.Remove(step);
+
+		Wizard.ChildStepAdded();
+	}
+
+	internal WizardStep Find(string stepId)
+	{
+		foreach (var child in _childSteps)
+		{
+			if (child.StepId == stepId) return child;
+
+			var childFindResult = child.Find(stepId);
+
+			if (childFindResult != null) return childFindResult;
+		}
+
+		return null;
+	}
+
+	public void Dispose()
+	{
+		if (ParentStep != null)
+		{
+			ParentStep.RemoveChild(this);
+			Wizard.CurrentStepIdChangedInternal -= OnCurrentStepChanged;
+		}
+		else
+		{
+			Wizard.RemoveStep(this);
+			Wizard.CurrentStepIdChangedInternal -= OnCurrentStepChanged;
+		}
+	}
+
+	private void OnCurrentStepChanged(object sender, EventArgs e)
+	{
+		StateHasChanged();
+	}
+
+	internal async Task<bool> RaiseOnBeforeNavigateNext()
+	{
+		var args = new CancellableActionEventArgs();
+		await OnBeforeNavigateNext.InvokeAsync(args);
+
+		return !args.Cancel;
+	}
+
+	internal async Task<bool> RaiseOnBeforeNavigatePrevious()
+	{
+		var args = new CancellableActionEventArgs();
+		await OnBeforeNavigatePrevious.InvokeAsync(args);
+
+		return !args.Cancel;
+	}
+
+	internal async Task RaiseOnAfterNavigateNext()
+	{
+		await OnAfterNavigateNext.InvokeAsync();
+	}
+
+	internal async Task RaiseOnAfterNavigatePrevious()
+	{
+		await OnAfterNavigatePrevious.InvokeAsync();
+	}
+}

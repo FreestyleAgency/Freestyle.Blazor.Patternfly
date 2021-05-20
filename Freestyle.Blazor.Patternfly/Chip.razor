@@ -1,0 +1,82 @@
+﻿@if (Visible)
+{
+	@if (ChipGroup == null)
+	{
+		<div class="pf-c-chip @(Removable && OnRemoveClick.HasDelegate ? String.Empty : CssClassConstants.ReadOnly)" @attributes="Attributes">
+			<span class="pf-c-chip__text" id="chip_one">@Text</span>
+			@if (!String.IsNullOrWhiteSpace(BadgeText))
+			{
+				<Badge Text="@BadgeText" Read="true" />
+			}
+			@if (Removable && OnRemoveClick.HasDelegate)
+			{
+				<button class="pf-c-button pf-m-plain" type="button" aria-labelledby="remove_chip_one chip_one" aria-label="Remove" @onclick="OnRemoveClick">
+					<i class="fas fa-times-circle" aria-hidden="true"></i>
+				</button>
+			}
+		</div>
+	}
+	else
+	{
+		<li class="pf-c-chip-group__list-item">
+			<div class="pf-c-chip @(Removable && OnRemoveClick.HasDelegate ? String.Empty : CssClassConstants.ReadOnly)" @attributes="Attributes">
+				<span class="pf-c-chip__text" id="chip_one">@Text</span>
+				@if (!String.IsNullOrWhiteSpace(BadgeText))
+				{
+					<Badge Text="@BadgeText" Read="true" />
+				}
+				@if (Removable && OnRemoveClick.HasDelegate)
+				{
+					<button class="pf-c-button pf-m-plain" type="button" aria-labelledby="remove_chip_one chip_one" aria-label="Remove" @onclick="OnRemoveClick">
+						<i class="fas fa-times-circle" aria-hidden="true"></i>
+					</button>
+				}
+			</div>
+		</li>
+	}
+}
+
+@code {
+	private bool _visible = true;
+
+	[Parameter]
+	public string Text { get; set; }
+
+	[Parameter]
+	public string BadgeText { get; set; }
+
+	[Parameter]
+	public bool Removable { get; set; } = true;
+
+	[Parameter]
+	public EventCallback<MouseEventArgs> OnRemoveClick { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> Attributes { get; set; }
+
+	[CascadingParameter(Name = "ChipGroup")]
+	protected ChipGroup ChipGroup { get; set; }
+
+	internal bool Visible
+	{
+		get { return _visible; }
+		set
+		{
+			if (value == _visible) return;
+
+			_visible = value;
+
+			StateHasChanged();
+		}
+	}
+
+	protected override Task OnInitializedAsync()
+	{
+		if (ChipGroup != null)
+		{
+			ChipGroup.AddChip(this);
+		}
+
+		return base.OnInitializedAsync();
+	}
+}

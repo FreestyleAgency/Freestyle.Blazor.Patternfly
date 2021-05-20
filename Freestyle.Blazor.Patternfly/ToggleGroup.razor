@@ -1,0 +1,36 @@
+﻿<div class="pf-c-toggle-group @AdditionalCssClass" @attributes="AdditionalAttributes">
+	<CascadingValue Name="ToggleGroup" Value="this" IsFixed="true">
+		@ChildContent
+	</CascadingValue>
+</div>
+
+
+@code {
+	private string id = Guid.NewGuid().ToString();
+
+	private List<ToggleGroupItem> _items = new List<ToggleGroupItem>();
+
+	internal IEnumerable<ToggleGroupItem> Items
+	{
+		get { return _items; }
+	}
+
+	private bool _expanded;
+
+	[Parameter]
+	public bool Light { get; set; }
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public string AdditionalCssClass { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+
+	internal void AddItem(ToggleGroupItem item)
+	{
+		_items.Add(item);
+	}
+}

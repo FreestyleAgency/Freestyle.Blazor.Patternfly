@@ -1,0 +1,115 @@
+﻿@inject IJSFunctions JSFunctions;
+
+<li class="pf-c-app-launcher__menu-wrapper @(External ? CssClassConstants.External : String.Empty) @_wrapperFavoriteClass">
+	<a class="pf-c-app-launcher__menu-item pf-m-link @(!Enabled ? CssClassConstants.Disabled : String.Empty)" aria-disabled="@(!Enabled)" href="@Href" target="@Target" tabindex="@(Enabled ? (int?)null : -1)" @onclick="OnClickCallback" @attributes="Attributes">
+		@if (!String.IsNullOrEmpty(IconUrl) || !String.IsNullOrEmpty(IconCssClass))
+		{
+			<span class="pf-c-app-launcher__menu-item-icon">
+				@if (!String.IsNullOrEmpty(IconUrl))
+				{
+					<img src="@IconUrl" alt="Icon" aria-hidden="true" />
+				}
+				else
+				{
+					<i class="@IconCssClass" aria-hidden="true"></i>
+				}
+			</span>
+		}
+		@Text
+		@if (External)
+		{
+			<i class="pf-c-app-launcher__menu-item-external-icon fas fa-external-link-alt" aria-hidden="true"></i>
+			<span class="pf-screen-reader">(opens new window)</span>
+		}
+	</a>
+	@if (Favorite != null)
+	{
+		<button @ref="_favoriteButton" class="pf-c-app-launcher__menu-item pf-m-action" type="button" @onclick="OnFavoriteButtonClick">
+			<i class="fas fa-star" aria-label="Favorite"></i>
+		</button>
+	}
+</li>
+
+@code {
+	private bool? _favorite;
+	private string _wrapperFavoriteClass;
+	private ElementReference _favoriteButton;
+
+	[Parameter]
+	public EventCallback<MouseEventArgs> OnClickCallback { get; set; }
+
+	[Parameter]
+	public bool External { get; set; }
+
+	[Parameter]
+	public string Target { get; set; }
+
+	[Parameter]
+	public string Href { get; set; }
+
+	[Parameter]
+	public string IconUrl { get; set; }
+
+	[Parameter]
+	public string IconCssClass { get; set; }
+
+	[Parameter]
+	public string Text { get; set; }
+
+	[Parameter]
+	public bool? Favorite
+	{
+		get { return _favorite; }
+		set
+		{
+			_favorite = value;
+			_wrapperFavoriteClass = value == true ? CssClassConstants.Favorite : String.Empty;
+		}
+	}
+
+	[Parameter]
+	public bool Enabled { get; set; } = true;
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> Attributes { get; set; }
+
+	[Parameter]
+	public EventCallback<ComponentMouseEventArgs<AppLauncherLinkMenuItem>> OnFavoriteClickCallback { get; set; }
+
+	[CascadingParameter(Name = "AppLauncher")]
+	public AppLauncher AppLauncher { get; set; }
+
+	[CascadingParameter(Name = "AppLauncherGroup")]
+	public AppLauncherGroup AppLauncherGroup { get; set; }
+
+	[Parameter]
+	public bool CollapseOnClick { get; set; } = true;
+
+	protected override void OnInitialized()
+	{
+		if (AppLauncher.HasGroups && AppLauncherGroup == null)
+			throw new Exception("All menu items must be within an AppLauncherGroup if an AppLauncher contains at least 1 group.");
+
+		base.OnInitialized();
+	}
+
+	private async void OnFavoriteButtonClick(MouseEventArgs mouseEventArgs)
+	{
+		await OnFavoriteClickCallback.InvokeAsync(new ComponentMouseEventArgs<AppLauncherLinkMenuItem>(this, mouseEventArgs));
+		await JSFunctions.BlurAsync(_favoriteButton);
+	}
+
+	public void SetFavorite(bool favorite)
+	{
+		this.Favorite = favorite;
+		StateHasChanged();
+	}
+
+	private void OnClick(MouseEventArgs mouseEventArgs)
+	{
+		OnClickCallback.InvokeAsync(mouseEventArgs);
+
+		if (CollapseOnClick)
+			AppLauncher.Collapse();
+	}
+}

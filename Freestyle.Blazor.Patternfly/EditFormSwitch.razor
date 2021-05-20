@@ -1,0 +1,38 @@
+﻿@inherits EditFormInputBase<bool>
+
+<label class="pf-c-switch" for="@Id">
+	<input class="@CssClass pf-c-switch__input @AdditionalCssClass" type="checkbox" id="@Id" aria-labelledby="@($"{Id}-{(CurrentValue ? "on" : "off")}")" disabled="@(!Enabled)" @bind="CurrentValue" @attributes="AdditionalAttributes" />
+	<span class="pf-c-switch__toggle">
+		@if (String.IsNullOrEmpty(LabelOn))
+		{
+			<span class="pf-c-switch__toggle-icon">
+				<i class="fas fa-check" aria-hidden="true"></i>
+			</span>
+		}
+	</span>
+	@if (!String.IsNullOrEmpty(LabelOn))
+	{
+		<span class="pf-c-switch__label pf-m-on" id="@Id-on" aria-hidden="true">@LabelOn</span>
+	}
+	@if (!String.IsNullOrEmpty(LabelOff))
+	{
+		<span class="pf-c-switch__label pf-m-off" id="@Id-off" aria-hidden="true">@LabelOff</span>
+	}
+</label>
+
+@code {
+	[Parameter]
+	public string LabelOn { get; set; }
+
+	[Parameter]
+	public string LabelOff { get; set; }
+
+	[Parameter]
+	public LeftRightHorizontalAlignment CheckAlignment { get; set; } = LeftRightHorizontalAlignment.Left;
+
+	protected override bool TryParseValueFromString(string value, out bool result, out string validationErrorMessage)
+	{
+		validationErrorMessage = null;
+		return bool.TryParse(value, out result);
+	}
+}

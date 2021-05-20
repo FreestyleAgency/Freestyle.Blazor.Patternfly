@@ -1,0 +1,28 @@
+﻿<nav class="pf-c-breadcrumb" aria-label="breadcrumb" @attributes="Attributes">
+	<ol class="pf-c-breadcrumb__list">
+		<CascadingValue Name="Breadcrumb" Value="this" IsFixed="true">
+			@ChildContent
+		</CascadingValue>
+	</ol>
+</nav>
+
+@code {
+	private List<BreadcrumbItem> breadcrumbItems = new List<BreadcrumbItem>();
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> Attributes { get; set; }
+
+	protected override void OnParametersSet()
+	{
+		breadcrumbItems = new List<BreadcrumbItem>();
+	}
+
+	internal void AddBreadcrumbItem(BreadcrumbItem item) {
+		breadcrumbItems.Add(item);
+
+		breadcrumbItems.FirstOrDefault()?.SetContext(true);
+	}
+}

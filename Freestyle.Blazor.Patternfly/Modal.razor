@@ -1,0 +1,125 @@
+﻿@inject IJSFunctions JSFunctions
+@inject IOutsideClickListener OutsideClickListener
+
+@if (Visible)
+{
+	<div @ref="_backdropRef" class="pf-c-backdrop">
+		<div @ref="_bullseyeRef" class="pf-l-bullseye">
+			<div @ref="_modalRef" class="pf-c-modal-box @CssClassConstants.GetSizeCssClass(Size)" role="dialog" aria-modal="true" aria-labelledby="@_id-modal-title" aria-describedby="@(DescriptionContent == null ? $"{_id}-modal-body" : $"{_id}-modal-description")" @attributes="AdditionalAttributes">
+				<button class="pf-c-button pf-m-plain" type="button" aria-label="Close" @onclick="OnCloseClick">
+					<i class="fas fa-times" aria-hidden="true"></i>
+				</button>
+				<header class="pf-c-modal-box__header">
+					<h1 class="pf-c-title pf-m-2xl" id="@_id-modal-title">@Title</h1>
+					@if (DescriptionContent != null)
+					{
+						<div class="pf-c-modal-box__description" id="@_id-modal-description">@DescriptionContent</div>
+					}
+				</header>
+				<div class="pf-c-modal-box__body" id="@_id-modal-body">@ChildContent</div>
+				<footer class="pf-c-modal-box__footer">
+					@FooterContent
+				</footer>
+			</div>
+		</div>
+	</div>
+}
+
+@code {
+	private ElementReference _backdropRef;
+	private ElementReference _modalRef;
+	private ElementReference _bullseyeRef;
+	private bool _visible;
+	private bool _afterRender;
+	private bool _shouldClose;
+	private bool _madeVisibleOnThisRender;
+	private string _id = Guid.NewGuid().ToString();
+
+	[Parameter]
+	public bool Visible
+	{
+		get { return _visible; }
+		set
+		{
+			if (_visible == value) return;
+
+			_visible = value;
+
+			VisibleChanged.InvokeAsync(_visible);
+
+			if (_visible)
+			{
+				JSFunctions.MoveToBodyEndAsync(_backdropRef);
+				JSFunctions.AddBodyClassAsync("pf-c-backdrop__open");
+
+				_madeVisibleOnThisRender = true;
+			}
+			else
+			{
+				JSFunctions.RemoveBodyClassAsync("pf-c-backdrop__open");
+			}
+		}
+	}
+
+	[Parameter]
+	public EventCallback<bool> VisibleChanged { get; set; }
+
+	[Parameter]
+	public RenderFragment DescriptionContent { get; set; }
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public RenderFragment FooterContent { get; set; }
+
+	[Parameter]
+	public Size Size { get; set; } = Size.Small;
+
+	[Parameter]
+	public string Title { get; set; }
+
+	[Parameter]
+	public bool CloseOnBackdropClick { get; set; } = true;
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+
+	protected override void OnInitialized()
+	{
+		OutsideClickListener.ClickOutside += (o, e) =>
+		{
+			if (Visible && CloseOnBackdropClick)
+			{
+				Hide();
+			}
+		};
+
+		base.OnInitialized();
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (Visible && _madeVisibleOnThisRender)
+		{
+			await JSFunctions.MoveToBodyEndAsync(_backdropRef);
+
+			OutsideClickListener.Register(_modalRef, _bullseyeRef);
+
+			_madeVisibleOnThisRender = false;
+		}
+
+		await base.OnAfterRenderAsync(firstRender);
+	}
+
+	private void OnCloseClick()
+	{
+		Hide();
+	}
+
+	private void Hide()
+	{
+		Visible = false;
+		StateHasChanged();
+	}
+}

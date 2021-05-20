@@ -1,0 +1,111 @@
+﻿<div class="pf-c-form__group">
+	<div class="pf-c-form__group-label">
+		<label class="pf-c-form__label" for="@Id-input-0">
+			<span class="pf-c-form__label-text">@Label</span>
+			@if (Required)
+			{
+				<span class="pf-c-form__label-required" aria-hidden="true">&#42;</span>
+			}
+		</label>
+		@if (!InlineHelpText && !String.IsNullOrEmpty(HelpText))
+		{
+			<Popover @bind-Visible="_popoverVisible" Inline="true">
+				<ChildContent>
+					<button class="pf-c-form__group-label-help" aria-label="More info" @onclick="() => _popoverVisible = !_popoverVisible" type="button">
+						<i class="pficon pf-icon-help" aria-hidden="true"></i>
+					</button>
+				</ChildContent>
+				<BodyContent>@HelpText</BodyContent>
+			</Popover>
+		}
+	</div>
+	<div class="pf-c-form__group-control">
+		<CascadingValue Name="FormGroup" Value="this" IsFixed="true">
+			@ChildContent
+		</CascadingValue>
+		@helperText
+	</div>
+</div>
+
+@code {
+	private bool _popoverVisible;
+	private List<ComponentBase> inputComponents { get; set; } = new List<ComponentBase>();
+	private object firstInput;
+	private RenderFragment helperText;
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[CascadingParameter(Name = "PFEditForm")]
+	public PFEditForm PFEditForm { get; set; }
+
+	[Parameter]
+	public string Id { get; set; } = Guid.NewGuid().ToString();
+
+	[Parameter]
+	public string Label { get; set; }
+
+	[Parameter]
+	public bool Required { get; set; }
+
+	[Parameter]
+	public string HelpText { get; set; }
+
+	[Parameter]
+	public bool InlineHelpText { get; set; } = true;
+
+	public int InputComponentCount
+	{
+		get { return inputComponents.Count; }
+	}
+
+	internal void SetLabel(string label)
+	{
+		this.Label = label;
+
+		StateHasChanged();
+	}
+
+	internal void SetRequired(bool required)
+	{
+		this.Required = required;
+
+		StateHasChanged();
+	}
+
+	internal void AddInputComponent<TValue>(EditFormInputBase<TValue> editFormInput)
+	{
+		inputComponents.Add(editFormInput);
+
+		if (firstInput == null)
+		{
+			helperText = (builder) =>
+			{
+				var inputType = FindInputBaseType(editFormInput.GetType());
+				var inputGenericTypes = inputType.GetGenericArguments();
+				var helperTextType = typeof(EditFormInputHelperText<>).MakeGenericType(inputGenericTypes);
+				builder.OpenComponent(0, helperTextType);
+
+				builder.AddAttribute(0, "EditFormInput", editFormInput);
+
+				if (InlineHelpText)
+					builder.AddAttribute(0, "HelpText", HelpText);
+
+				builder.CloseComponent();
+
+				firstInput = editFormInput;
+			};
+
+			StateHasChanged();
+		}
+	}
+
+	private Type FindInputBaseType(Type inputType)
+	{
+		while (inputType != typeof(object) && !inputType.Name.Contains("EditFormInputBase")) { // TODO: Find a better way to do this
+			inputType = inputType.BaseType;
+		}
+
+		return inputType;
+	}
+}

@@ -1,0 +1,85 @@
+﻿<div class="pf-c-notification-drawer">
+	<div class="pf-c-notification-drawer__header">
+		<h1 class="pf-c-notification-drawer__header-title">@Title</h1>
+		@{ 
+			var unreadCount = items?.Count(x => !x.Read);
+		}
+		<span class="pf-c-notification-drawer__header-status">@if (unreadCount > 0) { <text>@unreadCount unread</text> }</span>
+		<div class="pf-c-notification-drawer__header-action">
+			@HeaderActions
+		</div>
+	</div>
+	<div class="pf-c-notification-drawer__body pf-u-h-100">
+		@if (groups.Any())
+		{
+			@:<div class="pf-c-notification-drawer__group-list">
+		}
+		else
+		{
+			@:<ul class="pf-c-notification-drawer__list">
+		}
+		<CascadingValue Name="NotificationDrawer" Value="this" IsFixed="true">
+			@ChildContent
+		</CascadingValue>
+		@if (groups.Any())
+		{
+			@:</div>
+		}
+		else
+		{
+			@:</ul>
+		}
+	</div>
+</div>
+
+@code {
+	private List<NotificationDrawerItem> items = new List<NotificationDrawerItem>();
+	private List<NotificationDrawerGroup> groups = new List<NotificationDrawerGroup>();
+
+	[Parameter]
+	public string Title { get; set; } = "Notifications";
+
+	[Parameter]
+	public RenderFragment HeaderActions { get; set; }
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	protected override void OnInitialized()
+	{
+		base.OnInitialized();
+	}
+
+	public void Update()
+	{
+		StateHasChanged();
+	}
+
+	internal void AddItem(NotificationDrawerItem item)
+	{
+		items.Add(item);
+
+		StateHasChanged();
+	}
+
+	internal void AddGroup(NotificationDrawerGroup group)
+	{
+		groups.Add(group);
+
+		StateHasChanged();
+	}
+
+	internal void RemoveItem(NotificationDrawerItem item)
+	{
+		items.Remove(item);
+
+		StateHasChanged();
+	}
+
+	internal void RemoveGroup(NotificationDrawerGroup group)
+	{
+		groups.Remove(group);
+
+		StateHasChanged();
+	}
+}

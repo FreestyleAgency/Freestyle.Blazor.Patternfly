@@ -1,0 +1,277 @@
+﻿@using System.ComponentModel;
+@page "/"
+
+<AlertGroup Toast="true">
+	<AlertGroupItem Importance="Importance.Success" Title="This is the title." ShowCloseButton="true">This is the description.</AlertGroupItem>
+	<AlertGroupItem Importance="Importance.Danger" Title="This is the title." ShowCloseButton="true">This is the description.</AlertGroupItem>
+</AlertGroup>
+
+<AboutModal @bind-Visible="aboutModalVisible">
+	<p>Modal content here.</p>
+</AboutModal>
+
+<Drawer @bind-Expanded="drawerExpanded">
+	<MainContent>
+		<section class="pf-c-page__main-breadcrumb">
+			<Breadcrumb>
+				<BreadcrumbItem Title="Home" Url="/" />
+				<BreadcrumbItem Title="Linkless Parent" />
+				<BreadcrumbItem Title="Linked Parent" Url="/somewhere" />
+				<BreadcrumbItem Title="Current Page" IsCurrent="true" />
+			</Breadcrumb>
+		</section>
+		<section class="pf-c-page__main-section pf-m-light">
+			<AlertGroup>
+				<Alert Importance="Importance.Default" Title="This is the title.">This is the description.</Alert>
+			</AlertGroup>
+
+			<Content>
+				<h1>Hello, world!</h1>
+
+				<p>Welcome to your new app.</p>
+			</Content>
+			<br />
+			<CalendarMonth Range="true" />
+			<br />
+			<Select Mode="SelectMode.Multiple" FilterMode="SelectFilterMode.Typeahead" ChipGroupMaxVisible="3">
+				<SelectGroup Title="Group 1">
+					<SelectItem Title="This is some text" Description="I have a description" />
+					<SelectItem Title="This is some text 2" Description="I also have a description" ShowFavouriteButton="true" Enabled="false" />
+				</SelectGroup>
+				<SelectGroup Title="Group 2">
+					<SelectItem Title="This is some text 3" Description="I have a description" ShowFavouriteButton="true" />
+					<SelectItem Title="This is some text 4" ShowFavouriteButton="true" />
+				</SelectGroup>
+			</Select>
+			<br />
+			<LinkButton Href="#" Text="This is a Link Button." />
+			<br /><br />
+			<Check Label="This is a checkbox" Description="This checkbox has a description." Enabled="false" Checked="true" />
+			<br /><br />
+			<Chip Text="Solo chip" BadgeText="2" />
+			<br /><br />
+			<ChipGroup MaxVisible="3" Category="true" Label="Category label">
+				<Chip Text="One" />
+				<Chip Text="Two" />
+				<Chip Text="Three" />
+				<Chip Text="Four" />
+				<Chip Text="Five" />
+			</ChipGroup>
+			<br />
+			<br />
+			<DataList Compact="true">
+				<DataListItem Checkable="true" Expandable="true" Selectable="true" ExpandOnSelect="true" ExclusivelySelectable="false" ExclusivelyCheckable="false" Checked="lic" CheckboxClicked="() => lic = !lic">
+					<PrimaryContent>Primary content</PrimaryContent>
+					<PrimaryContentAdditional>Additional primary content</PrimaryContentAdditional>
+					<AdditionalCells>
+						<DataListCell>Secondary content</DataListCell>
+						<DataListCell>Tertiary content</DataListCell>
+					</AdditionalCells>
+					<AdditionalRows>
+						<DataListRow>
+							<DataListCell>Another row's primary</DataListCell>
+							<DataListCell>Some more in another cell</DataListCell>
+						</DataListRow>
+					</AdditionalRows>
+					<Actions>
+						<Button Style="ButtonStyle.Primary" Text="Hello" />
+					</Actions>
+				</DataListItem>
+				<DataListItem Checkable="true" Expandable="true" Selectable="true" ExpandOnSelect="true" ExclusivelySelectable="false" ExclusivelyCheckable="false">
+					<PrimaryContent>Primary content</PrimaryContent>
+					<PrimaryContentAdditional>Additional primary content</PrimaryContentAdditional>
+					<AdditionalCells>
+						<DataListCell>Secondary content</DataListCell>
+						<DataListCell>Tertiary content</DataListCell>
+					</AdditionalCells>
+					<ExpandableContent>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</ExpandableContent>
+				</DataListItem>
+				<DataListItem Checkable="true" Expandable="true" Selectable="true" ExpandOnSelect="true" ExclusivelySelectable="false" ExclusivelyCheckable="false">
+					<PrimaryContent>Primary content</PrimaryContent>
+					<PrimaryContentAdditional>Additional primary content</PrimaryContentAdditional>
+					<AdditionalCells>
+						<DataListCell>Secondary content</DataListCell>
+						<DataListCell>Tertiary content</DataListCell>
+					</AdditionalCells>
+					<ExpandableContent>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</ExpandableContent>
+					<DropdownOptions>
+						<DropdownButtonMenuItem Text="Hello world" />
+						<DropdownButtonMenuItem Text="Hello world 2" />
+						<DropdownSeparator />
+						<DropdownButtonMenuItem Text="Hello world 3" />
+					</DropdownOptions>
+				</DataListItem>
+			</DataList>
+
+			<Dropdown Text="Some text">
+				<DropdownGroup>
+					<DropdownButtonMenuItem Text="Hello world" />
+				</DropdownGroup>
+				<DropdownSeparator />
+				<DropdownGroup Title="Group 1">
+					<DropdownButtonMenuItem Text="Hello world 2" />
+					<DropdownLinkMenuItem Text="Hello world 3" External="true" Href="https://news.bbc.co.uk" Target="_blank" IconUrl="/css/assets/images/pf-logo-small.svg" />
+				</DropdownGroup>
+			</Dropdown>
+
+			<Tooltip Text="This is a tooltip"><p>Hello, this has a tooltip</p></Tooltip>
+		</section>
+		<section class="pf-c-page__main-section pf-m-light">
+			<EmptyState>
+				<ChildContent>
+					This represents an the empty state pattern in PatternFly 4. Hopefully it's simple enough to use but flexible enough to meet a variety of needs.
+				</ChildContent>
+				<PrimaryAction>
+					<Button ButtonStyle="ButtonStyle.Primary" Text="Primary action" />
+				</PrimaryAction>
+			</EmptyState>
+
+			<Expandable>
+				This content is visible only when the component is expanded.
+			</Expandable>
+
+			<LabelGroup Category="true" Label="Label group" MaxVisible="3">
+				<Label Text="Test 1" Colour="NamedColour.Blue" Outline="true" />
+				<Label Text="Test 2" Colour="NamedColour.Cyan" Outline="true" />
+				<Label Text="Test 3" Colour="NamedColour.Default" Outline="true" />
+				<Label Text="Test 4" Colour="NamedColour.Green" />
+				<Label Text="Test 5" Colour="NamedColour.Orange" />
+				<Label Text="Test 6" Colour="NamedColour.Purple" />
+				<Label Text="Test 6" Colour="NamedColour.Red" />
+			</LabelGroup>
+
+			<EditFormModal @bind-Visible="dummyModel.ModalVisible" Title="Sample modal" Model="dummyModel" OnValidSubmit="ModalDummySubmit" ShowValidationSummaryInHeader="true">
+				<ChildContent>
+					<DataAnnotationsValidator />
+					@*<EditFormValidationSummary Model="dummyModel" />*@
+					<p>This is the modal body.</p>
+					<EditFormGroup Label="This is a text field" Required="true" HelpText="This is some helper text">
+						<EditFormText @bind-Value="dummyModel.Field1" />
+					</EditFormGroup>
+					<EditFormGroup>
+						<EditFormNumber @bind-Value="dummyModel.NumberField1" />
+					</EditFormGroup>
+					<EditFormGroup>
+						<EditFormDate @bind-Value="dummyModel.DateField1" />
+					</EditFormGroup>
+					<EditFormGroup Label="This is a text field" Required="false" HelpText="This is some help text in a popover.">
+						<InputGroup>
+							<InputGroupText>Pre</InputGroupText>
+							<EditFormText HelperText="This is some helper text" @bind-Value="dummyModel.Field2" />
+							<InputGroupText>Post</InputGroupText>
+						</InputGroup>
+					</EditFormGroup>
+					<EditFormGroup Label="This is a select field" Required="true" HelpText="This is some helper text">
+						<EditFormSelect @bind-Value="dummyModel.Field3">
+							<option value="">Please Select</option>
+							<option value="option1">Option 1</option>
+							<option value="option2">Option 2</option>
+						</EditFormSelect>
+					</EditFormGroup>
+					<p>
+						This is just some content.
+
+						Lorem ipsum dolor sit amet, consectetur adipiscing elit. In porta venenatis lorem, a porta odio interdum quis. Ut pulvinar vel nibh a aliquam. Vestibulum sodales ligula tortor, eu tincidunt justo fermentum in. Etiam sit amet dui vitae lectus iaculis efficitur eu faucibus felis. Integer fringilla egestas dignissim. Pellentesque vel odio ac lectus pulvinar congue. Pellentesque aliquam eu est vitae condimentum. Curabitur finibus aliquet eros sed interdum. Vestibulum luctus faucibus sapien, feugiat tempor leo cursus ut.
+
+						Quisque tortor nulla, imperdiet sed luctus eget, elementum in augue. Sed sed eros odio. Pellentesque dictum pulvinar commodo. Donec id mauris egestas, auctor urna sed, luctus neque. Curabitur varius finibus dolor, eget suscipit dui efficitur in. Integer vel sapien et justo ullamcorper imperdiet id eu velit. Nam auctor facilisis nisl sit amet maximus. Donec bibendum velit quis nunc fermentum congue. Donec venenatis euismod metus non aliquet. Integer sit amet volutpat quam. Sed neque magna, luctus id massa sed, tristique semper purus. Interdum et malesuada fames ac ante ipsum primis in faucibus. Sed rhoncus scelerisque congue. Etiam eget ullamcorper magna.
+
+						Vivamus vitae velit vitae odio placerat suscipit. Nam non viverra massa. Etiam id odio porta, posuere ante eu, tempor mauris. Vestibulum et vulputate tortor, nec imperdiet tortor. Suspendisse in ligula fermentum, congue massa sit amet, tincidunt neque. Praesent ut urna aliquet, ornare nibh ac, faucibus sem. Suspendisse imperdiet est odio, venenatis pellentesque libero commodo eu. Sed non porttitor lacus, in lobortis urna. Nulla turpis nunc, consequat et volutpat eu, ultrices et arcu. In pulvinar egestas porta. Nullam leo dui, pretium eu auctor vel, consequat sit amet velit. Nunc vulputate in magna a sagittis.
+
+						Praesent cursus libero vel eros bibendum, sit amet eleifend quam suscipit. Curabitur vel dui mauris. Donec posuere tincidunt felis dignissim vulputate. Pellentesque at nisi sit amet dui finibus congue eu in felis. Sed volutpat posuere nisl sed pharetra. Donec laoreet, nibh eu venenatis sagittis, arcu enim pellentesque tellus, nec sagittis velit quam quis diam. Sed eleifend vehicula augue, varius maximus libero. Curabitur scelerisque enim quam, eget elementum augue mollis in. Curabitur quis elementum enim. Vivamus sed dolor ac felis pulvinar blandit. Morbi vel libero in erat sagittis faucibus. Donec mattis eget nisl quis dictum. Aliquam feugiat laoreet viverra. In hac habitasse platea dictumst. Nam commodo lectus sit amet magna tincidunt, eget ultrices massa blandit.
+
+						Aliquam viverra egestas nisi vel scelerisque. Mauris vitae auctor diam. Nulla sagittis mattis ultricies. Fusce pharetra mi nec laoreet consequat. Sed eu eros felis. In elementum euismod rhoncus. Duis sagittis dictum diam, in aliquet turpis ornare vitae. In eget lorem erat. Sed vel nibh neque. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; In hac habitasse platea dictumst. Mauris dignissim sagittis placerat. Praesent aliquet, turpis sit amet ullamcorper dignissim, ligula tortor molestie diam, eu facilisis ligula ligula in felis. Nullam eget varius libero.
+					</p>
+				</ChildContent>
+				<FooterContent>
+					<Button Text="Save" ButtonStyle="ButtonStyle.Primary" type="submit" />
+					<Button Text="Close" ButtonStyle="ButtonStyle.Plain" @onclick="() => { dummyModel.ModalVisible = false; StateHasChanged(); }" />
+				</FooterContent>
+			</EditFormModal>
+
+			<Button Text="Show generic modal" ButtonStyle="ButtonStyle.Secondary" Block="true" @onclick="OnShowModalClick" />
+
+			<br /><br />
+			<SearchInput TotalMatches="5" SelectedMatchText="Some example" EnableMatchNavigation="true" />
+		</section>
+	</MainContent>
+	<DrawerHeaderContent>
+		This is the header
+	</DrawerHeaderContent>
+	<DrawerContent>
+		<ClipboardCopy Text="This is an editable version of the Copy to Clipboard Component that has an expandable section. Got a lot of text here, need to see all of it? Click that arrow on the left side and check out the resulting expansion." Expandable="true" />
+		<br />
+		<br />
+		<Button Text="Show about modal" IconClass="fas fa-info-circle" ButtonStyle="ButtonStyle.Secondary" Block="true" @onclick="OnShowAboutClick" />
+		<br />
+		<hr />
+		<br />
+		<Accordion FixedHeight="true">
+			<AccordionItem Title="Item 1">
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis molestie lorem lacinia dolor aliquet faucibus. Suspendisse gravida imperdiet accumsan. Aenean auctor lorem justo, vitae tincidunt enim blandit vel. Aenean quis tempus dolor. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis molestie lorem lacinia dolor aliquet faucibus. Suspendisse gravida imperdiet accumsan. Aenean auctor lorem justo, vitae tincidunt enim blandit vel. Aenean quis tempus dolor. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis molestie lorem lacinia dolor aliquet faucibus. Suspendisse gravida imperdiet accumsan. Aenean auctor lorem justo, vitae tincidunt enim blandit vel. Aenean quis tempus dolor. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+			</AccordionItem>
+			<AccordionItem Title="Item 2">
+				Some content in the accordion item.
+			</AccordionItem>
+			<AccordionItem Title="Item 3" Expanded="true">
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis molestie lorem lacinia dolor aliquet faucibus. Suspendisse gravida imperdiet accumsan. Aenean auctor lorem justo, vitae tincidunt enim blandit vel. Aenean quis tempus dolor. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis molestie lorem lacinia dolor aliquet faucibus. Suspendisse gravida imperdiet accumsan. Aenean auctor lorem justo, vitae tincidunt enim blandit vel. Aenean quis tempus dolor. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis molestie lorem lacinia dolor aliquet faucibus. Suspendisse gravida imperdiet accumsan. Aenean auctor lorem justo, vitae tincidunt enim blandit vel. Aenean quis tempus dolor. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+			</AccordionItem>
+		</Accordion>
+	</DrawerContent>
+</Drawer>
+
+
+
+@code {
+	bool aboutModalVisible = false;
+	//bool _modalVisible = false;
+	bool drawerExpanded = true;
+
+	/*private bool ModalVisible
+	{
+		get {
+			return _modalVisible;
+		}
+		set {
+			_modalVisible = value;
+		}
+	}*/
+
+	bool lic = true;
+
+	private void OnShowAboutClick(MouseEventArgs mouseEventArgs)
+	{
+		aboutModalVisible = true;
+	}
+
+	private void OnShowModalClick(MouseEventArgs mouseEventArgs)
+	{
+		dummyModel.ModalVisible = true;
+	}
+
+	private class DummyModel
+	{
+		public bool ModalVisible { get; set; }
+
+		[System.ComponentModel.DataAnnotations.Required]
+		public string Field1 { get; set; }
+
+		public string Field2 { get; set; }
+
+		[System.ComponentModel.DataAnnotations.Required]
+		public string Field3 { get; set; }
+
+		public DateTime DateField1 { get; set; } = DateTime.UtcNow;
+
+		public int NumberField1 { get; set; }
+	}
+
+	DummyModel dummyModel = new DummyModel();
+
+	private async Task ModalDummySubmit(EditContext editContext)
+	{
+		await Task.Delay(5000);
+
+		dummyModel.ModalVisible = false;
+		StateHasChanged();
+	}
+}

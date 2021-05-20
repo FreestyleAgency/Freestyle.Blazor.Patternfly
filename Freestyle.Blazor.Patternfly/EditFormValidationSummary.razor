@@ -1,0 +1,40 @@
+﻿<Alert Inline="true" Importance="Importance.Danger" Title="@Title" Visible="HasValidationMessages">
+	@if (!TitleOnly)
+	{
+		<ValidationSummary />
+	}
+</Alert>
+
+@code {
+	[CascadingParameter]
+	EditContext? CurrentEditContext { get; set; }
+
+	[Parameter]
+	public object? Model { get; set; }
+
+	[Parameter]
+	public string Title { get; set; } = "Please correct the problems identified below.";
+
+	[Parameter]
+	public bool TitleOnly { get; set; } = true;
+
+	public bool HasValidationMessages
+	{
+		get
+		{
+			if (CurrentEditContext == null) return false;
+
+			return CurrentEditContext.GetValidationMessages().Any();
+		}
+	}
+
+	protected override Task OnInitializedAsync()
+	{
+		if (CurrentEditContext != null)
+		{
+			CurrentEditContext.OnValidationStateChanged += (o, e) => StateHasChanged();
+		}
+
+		return base.OnInitializedAsync();
+	}
+}

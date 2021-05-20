@@ -1,0 +1,25 @@
+﻿@typeparam TValue
+@inherits EditFormInputBase<TValue>
+
+<select id="@Id" class="@CssClass pf-c-form-control @(IsValid == true  && !HasValidationMessages ? CssClassConstants.Success : String.Empty) @AdditionalCssClass" required="@Required" disabled="@(!Enabled)" @bind="CurrentValue" @attributes="AdditionalAttributes" aria-invalid="@(HasValidationMessages.ToString().ToLower())" aria-describedby="@Id-helper" @onblur="OnBlur">
+	@ChildContent
+</select>
+
+@code {
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	protected override bool TryParseValueFromString(string value, out TValue result, out string validationErrorMessage)
+	{
+		return this.TryParseSelectableValueFromString(value, out result, out validationErrorMessage);
+	}
+
+	private void OnBlur()
+	{
+		EditContext.NotifyFieldChanged(FieldIdentifier);
+
+		IsValid = !HasValidationMessages;
+		OnAfterValidate();
+		StateHasChanged();
+	}
+}

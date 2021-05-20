@@ -1,0 +1,43 @@
+﻿<section class="@GetTypeClass() @(Light ? CssClassConstants.Light : String.Empty) @(LimitWidth ? CssClassConstants.LimitWidth : String.Empty) @AdditionalCssClass" @attributes="AdditionalAttributes">
+	@if (LimitWidth)
+	{
+		<div class="pf-c-page__main-body">
+			@ChildContent
+		</div>
+	}
+	else
+	{
+		@ChildContent
+	}
+</section>
+
+@code {
+	[Parameter]
+	public bool Light { get; set; }
+
+	[Parameter]
+	public bool LimitWidth { get; set; }
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public PageSectionType Type { get; set; } = PageSectionType.Normal;
+
+	[Parameter]
+	public string AdditionalCssClass { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+
+	private string GetTypeClass()
+	{
+		switch (Type)
+		{
+			case PageSectionType.Nav: return "pf-c-page__main-nav";
+			case PageSectionType.Breadcrumb: return "pf-c-page__main-breadcrumb";
+			case PageSectionType.Wizard: return "pf-c-page__main-wizard";
+			default: return "pf-c-page__main-section";
+		}
+	}
+}

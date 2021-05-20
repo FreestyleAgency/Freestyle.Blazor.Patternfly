@@ -1,0 +1,20 @@
+﻿@inherits EditFormInputBase<TValue>
+@typeparam TValue
+@using Microsoft.AspNetCore.Components.Forms 
+
+<InputRadioGroup Value="Value" ValueChanged="ValueChanged" ValueExpression="ValueExpression" Name="@Name" DisplayName="@DisplayName" @attributes="AdditionalAttributes">
+	@ChildContent
+</InputRadioGroup>
+
+@code {
+	[Parameter]
+	public string Name { get; set; }
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	protected override bool TryParseValueFromString(string value, out TValue result, out string validationErrorMessage)
+	{
+		return this.TryParseSelectableValueFromString(value, out result, out validationErrorMessage);
+	}
+}

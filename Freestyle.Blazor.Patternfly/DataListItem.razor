@@ -1,0 +1,217 @@
+﻿<li class="pf-c-data-list__item @(Expandable && _expanded ? CssClassConstants.Expanded : String.Empty) @(Selectable ? CssClassConstants.Selectable : String.Empty) @(Selectable && _selected ? CssClassConstants.Selected : String.Empty)" aria-labelledby="@_id-primary-content" @onclick="OnClick">
+	<div class="pf-c-data-list__item-row">
+		@if (Expandable && ExpandableContent != null)
+		{
+			<div class="pf-c-data-list__item-control">
+				<div class="pf-c-data-list__toggle">
+					<button class="pf-c-button pf-m-plain" type="button" aria-labelledby="@_id-expand-toggle @_id-primary-content" id="@_id-expand-toggle" aria-label="Toggle details" aria-expanded="@(Expanded.ToString())" aria-controls="@_id-expandable" @onclick="ToggleExpanded" @onclick:stopPropagation>
+						<i class="fas fa-angle-right pf-c-data-list__toggle-icon"></i>
+					</button>
+				</div>
+			</div>
+		}
+		@if (Checkable)
+		{
+			<div class="pf-c-data-list__item-control">
+				<div class="pf-c-data-list__check">
+					@if (ExclusivelyCheckable)
+					{
+						<input type="radio" aria-labelledby="@_id-primary-content" checked="@Checked" @onclick="CheckboxClicked" @onclick:stopPropagation />
+					}
+					else
+					{
+						<input type="checkbox" aria-labelledby="@_id-primary-content" checked="@Checked" @onclick="CheckboxClicked" @onclick:stopPropagation />
+					}
+				</div>
+			</div>
+		}
+		<div class="pf-c-data-list__item-content">
+			<div class="pf-c-data-list__cell">
+				<span id="@_id-primary-content">@PrimaryContent</span>
+				@PrimaryContentAdditional
+			</div>
+			@AdditionalCells
+		</div>
+		@if (Actions != null)
+		{
+			<div class="pf-c-data-list__item-action @((ShowDropdownAndActions && DropdownOptions != null) || DropdownOptions == null ? String.Empty : "pf-m-hidden pf-m-visible-on-lg")">
+				@Actions
+			</div>
+		}
+		@if (DropdownOptions != null)
+		{
+			<div class="pf-c-data-list__item-action @((ShowDropdownAndActions && Actions != null) || Actions == null ? String.Empty : "pf-m-hidden-on-lg")">
+				<div class="pf-c-data-list__action">
+					<Dropdown Mode="DropdownMode.Kebab" HorizontalAlignment="@DropdownMenuHorizontalAlignment">
+						@DropdownOptions
+					</Dropdown>
+				</div>
+			</div>
+		}
+	</div>
+	@AdditionalRows
+	@if (Expandable && ExpandableContent != null)
+	{
+		<section class="pf-c-data-list__expandable-content" id="@_id-expandable" aria-label="@ExpandableAriaLabel" hidden="@(!Expanded)">
+			<div class="pf-c-data-list__expandable-content-body">@ExpandableContent</div>
+		</section>
+	}
+</li>
+
+@code {
+	private string _id = Guid.NewGuid().ToString();
+	private bool _selected;
+	private bool _expanded;
+
+	[Parameter]
+	public bool Expandable { get; set; }
+
+	[Parameter]
+	public bool Expanded
+	{
+		get => _expanded;
+		set
+		{
+			if (value == _expanded) return;
+
+			_expanded = value;
+
+			ExpandedChanged.InvokeAsync(value);
+
+			StateHasChanged();
+		}
+	}
+
+	[Parameter]
+	public bool Checkable { get; set; }
+
+	[Parameter]
+	public bool Checked { get; set; }
+
+	[Parameter]
+	public EventCallback<MouseEventArgs> CheckboxClicked { get; set; }
+
+	[Parameter]
+	public bool Selectable { get; set; }
+
+	[Parameter]
+	public bool ExclusivelySelectable { get; set; }
+
+	[Parameter]
+	public bool ExclusivelyCheckable { get; set; }
+
+	[Parameter]
+	public bool Selected
+	{
+		get => _selected && Selectable;
+		set
+		{
+			if (value == _selected || !Selectable) return;
+
+			_selected = value;
+
+			if (ExclusivelySelectable && value)
+			{
+				if (DataList?.Items != null)
+				{
+					foreach (var otherRow in DataList.Items.Where(x => x != this))
+					{
+						if (otherRow.Selected)
+							otherRow.Selected = false;
+					}
+				}
+			}
+
+			if (Expandable && ExpandableContent != null && ExpandOnSelect && value)
+				Expanded = true;
+
+			SelectedChanged.InvokeAsync(value);
+
+			StateHasChanged();
+		}
+	}
+
+	[Parameter]
+	public RenderFragment PrimaryContent { get; set; }
+
+	[Parameter]
+	public RenderFragment PrimaryContentAdditional { get; set; }
+
+	[Parameter]
+	public RenderFragment AdditionalCells { get; set; }
+
+	[Parameter]
+	public RenderFragment Actions { get; set; }
+
+	[Parameter]
+	public RenderFragment DropdownOptions { get; set; }
+
+	[Parameter]
+	public LeftRightHorizontalAlignment DropdownMenuHorizontalAlignment { get; set; } = LeftRightHorizontalAlignment.Right;
+
+	[Parameter]
+	public RenderFragment AdditionalRows { get; set; }
+
+	[Parameter]
+	public RenderFragment ExpandableContent { get; set; }
+
+	[Parameter]
+	public bool SelectOnClick { get; set; } = true;
+
+	[Parameter]
+	public bool ExpandOnSelect { get; set; }
+
+	[Parameter]
+	public bool ExpandOnClick { get; set; }
+
+	[Parameter]
+	public bool ShowDropdownAndActions { get; set; }
+
+	[Parameter]
+	public string ExpandableAriaLabel { get; set; }
+
+	[Parameter]
+	public EventCallback<MouseEventArgs> Clicked { get; set; }
+
+	[Parameter]
+	public EventCallback<bool> ExpandedChanged { get; set; }
+
+	[Parameter]
+	public EventCallback<bool> SelectedChanged { get; set; }
+
+	[CascadingParameter(Name = "DataList")]
+	public DataList DataList { get; set; }
+
+	protected override void OnInitialized()
+	{
+		DataList.Items.Add(this);
+
+		base.OnInitialized();
+	}
+
+	public void OnClick(MouseEventArgs mouseEventArgs)
+	{
+		if (mouseEventArgs.Button == 0)
+		{
+			Clicked.InvokeAsync(mouseEventArgs);
+
+			if (Selectable && SelectOnClick)
+			{
+				Selected = !Selected;
+				StateHasChanged();
+			}
+
+			if (Expandable && ExpandableContent != null && ExpandOnClick)
+			{
+				Expanded = true;
+			}
+		}
+	}
+
+	private void ToggleExpanded()
+	{
+		if (!Expandable) return;
+
+		Expanded = !Expanded;
+	}
+}

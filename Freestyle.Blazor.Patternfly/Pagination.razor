@@ -1,0 +1,236 @@
+﻿<div class="pf-c-pagination @(DisplayMode == PaginationDisplayMode.Compact ? CssClassConstants.Compact : String.Empty) @(DisplayMode == PaginationDisplayMode.Summary ? CssClassConstants.DisplaySummary : String.Empty) @(VerticalAlignment == TopBottomVerticalAlignment.Bottom ? CssClassConstants.Bottom : String.Empty) @(Sticky ? CssClassConstants.Sticky : String.Empty)">
+	@if (VerticalAlignment == TopBottomVerticalAlignment.Top)
+	{
+		<div class="pf-c-pagination__total-items">
+			<b>@CurrentPageFirstItemIndex - @CurrentPageLastItemIndex</b> of
+			<b>@TotalItems</b>
+		</div>
+	}
+	<OptionsMenu Plain="true" Enabled="Enabled" MenuAlignment="(VerticalAlignment == TopBottomVerticalAlignment.Bottom ? TopBottomVerticalAlignment.Top : TopBottomVerticalAlignment.Bottom)" HorizontalAlignment="(PageSize == 0 ? LeftRightHorizontalAlignment.Right : LeftRightHorizontalAlignment.Left)">
+		<ButtonContent>
+			@if (PageSize == 0) {
+				<text><b>All</b> of </text>
+			} else {
+				<text><b>@(CurrentPageFirstItemIndex + 1) - @(CurrentPageLastItemIndex + 1)</b> of </text>
+			}
+			<b>@TotalItems</b>
+		</ButtonContent>
+		<ChildContent>
+			@foreach (var sizeOption in PageSizeOptions)
+			{
+				<OptionsMenuItem Selected="sizeOption == PageSize" SelectedChanged="(selected) => { if (selected) { PageSize = sizeOption; } }">@sizeOption per page</OptionsMenuItem>
+			}
+			@if (EnableShowAll)
+			{
+				<OptionsMenuItem Selected="PageSize == 0" SelectedChanged="(selected) => { if (selected) { PageSize = 0; } }">Show all</OptionsMenuItem>
+			}
+		</ChildContent>
+	</OptionsMenu>
+	@if (PageSize > 0)
+	{
+		<nav class="pf-c-pagination__nav" aria-label="Pagination">
+			<div class="pf-c-pagination__nav-control pf-m-first">
+				<button class="pf-c-button pf-m-plain" type="button" disabled="@(!Enabled || CurrentPage == 1)" aria-label="Go to first page" @onclick="GoFirst">
+					<i class="fas fa-angle-double-left" aria-hidden="true"></i>
+				</button>
+			</div>
+			<div class="pf-c-pagination__nav-control pf-m-prev">
+				<button class="pf-c-button pf-m-plain" type="button" disabled="@(!Enabled || CurrentPage == 1)" aria-label="Go to previous page" @onclick="GoPrevious">
+					<i class="fas fa-angle-left" aria-hidden="true"></i>
+				</button>
+			</div>
+			<div class="pf-c-pagination__nav-page-select">
+				<input class="pf-c-form-control" aria-label="Current page" type="number" min="1" max="@TotalPages" @bind-value="@CurrentPage" disabled="@(!Enabled)" />
+				<span aria-hidden="true">of @TotalPages</span>
+			</div>
+			<div class="pf-c-pagination__nav-control pf-m-next">
+				<button class="pf-c-button pf-m-plain" type="button" disabled="@(!Enabled || CurrentPage == TotalPages)" aria-label="Go to next page" @onclick="GoNext">
+					<i class="fas fa-angle-right" aria-hidden="true"></i>
+				</button>
+			</div>
+			<div class="pf-c-pagination__nav-control pf-m-last">
+				<button class="pf-c-button pf-m-plain" type="button" disabled="@(!Enabled || CurrentPage == TotalPages)" aria-label="Go to last page" @onclick="GoLast">
+					<i class="fas fa-angle-double-right" aria-hidden="true"></i>
+				</button>
+			</div>
+		</nav>
+	}
+</div>
+
+@code {
+	private int _currentPage = 1;
+	private int _pageSize = 10;
+	private int _totalItems = 0;
+	private bool _initialized = false;
+	private bool _fireChangedAfterInit = false;
+
+	public int CurrentPageFirstItemIndex { get; private set; }
+
+	public int CurrentPageLastItemIndex { get; private set; }
+
+	[Parameter]
+	public int TotalItems
+	{
+		get { return _totalItems; }
+		set
+		{
+			if (value == _totalItems) return;
+
+			_totalItems = Math.Max(0, value);
+			CurrentPage = Math.Min(_currentPage, TotalPages);
+
+			CalculateFromCurrentPage();
+
+			if (_initialized)
+				OnItemsChanged.InvokeAsync(CurrentState).Wait();
+			else
+				_fireChangedAfterInit = true;
+		}
+	}
+
+	[Parameter]
+	public int PageSize
+	{
+		get { return _pageSize; }
+		set
+		{
+			if (value == _pageSize) return;
+
+			if (EnableShowAll && value <= 0)
+			{
+				_pageSize = 0;
+				_currentPage = 1;
+			}
+			else
+			{
+				_pageSize = Math.Max(1, value);
+				_currentPage = Math.Min(_currentPage, TotalPages);
+			}
+
+			CalculateFromCurrentPage();
+
+			PageSizeChanged.InvokeAsync(_pageSize).Wait();
+
+			if (_initialized)
+				OnItemsChanged.InvokeAsync(CurrentState).Wait();
+			else
+				_fireChangedAfterInit = true;
+		}
+	}
+
+	[Parameter]
+	public int CurrentPage {
+		get { return Math.Min(TotalPages, _currentPage); }
+		set
+		{
+			if (EnableShowAll && PageSize == 0)
+				value = 1;
+
+			if (value == _currentPage) return;
+
+			_currentPage = Math.Max(1, Math.Min(TotalPages, value));
+			CalculateFromCurrentPage();
+
+			CurrentPageChanged.InvokeAsync(_currentPage).Wait();
+
+			if (_initialized)
+				OnItemsChanged.InvokeAsync(CurrentState).Wait();
+			else
+				_fireChangedAfterInit = true;
+		}
+	}
+
+	[Parameter]
+	public EventCallback<int> CurrentPageChanged { get; set; }
+
+	[Parameter]
+	public EventCallback<int> PageSizeChanged { get; set; }
+
+	[Parameter]
+	public EventCallback<PaginationState> OnItemsChanged { get; set; }
+
+	public int TotalPages
+	{
+		get
+		{
+			return (int)Math.Ceiling((float)TotalItems / PageSize);
+		}
+	}
+
+	[Parameter]
+	public IEnumerable<int> PageSizeOptions { get; set; } = new int[] { 10, 20, 50, 100 };
+
+	[Parameter]
+	public bool Enabled { get; set; } = true;
+
+	[Parameter]
+	public PaginationDisplayMode DisplayMode { get; set; }
+
+	[Parameter]
+	public bool Sticky { get; set; }
+
+	[Parameter]
+	public TopBottomVerticalAlignment VerticalAlignment { get; set; }
+
+	[Parameter]
+	public bool EnableShowAll { get; set; }
+
+	private PaginationState CurrentState
+	{
+		get
+		{
+			return new PaginationState() { PageNumber = _currentPage, FirstItemIndex = CurrentPageFirstItemIndex, LastItemIndex = CurrentPageLastItemIndex, TotalItems = TotalItems, PageItemCount = (CurrentPageLastItemIndex - CurrentPageFirstItemIndex) + 1 };
+		}
+	}
+
+	private void GoFirst()
+	{
+		CurrentPage = 1;
+		CalculateFromCurrentPage();
+	}
+
+	private void GoPrevious()
+	{
+		CurrentPage = Math.Max(1, CurrentPage - 1);
+		CalculateFromCurrentPage();
+	}
+
+	private void GoNext()
+	{
+		CurrentPage = Math.Min(TotalPages, CurrentPage + 1);
+		CalculateFromCurrentPage();
+	}
+
+	private void GoLast()
+	{
+		CurrentPage = TotalPages;
+		CalculateFromCurrentPage();
+	}
+
+	private void CalculateFromCurrentPage()
+	{
+		if (EnableShowAll && PageSize == 0)
+		{
+			CurrentPageFirstItemIndex = 0;
+			CurrentPageLastItemIndex = TotalItems - 1;
+		}
+		else
+		{
+			CurrentPageFirstItemIndex = (PageSize * (CurrentPage - 1));
+			CurrentPageLastItemIndex = Math.Min(TotalItems, CurrentPageFirstItemIndex + PageSize) - 1;
+		}
+	}
+
+	protected override void OnInitialized()
+	{
+		_initialized = true;
+
+		CurrentPage = 1;
+		CalculateFromCurrentPage();
+
+		if (_fireChangedAfterInit)
+			OnItemsChanged.InvokeAsync(CurrentState).Wait();
+
+		base.OnInitialized();
+	}
+}

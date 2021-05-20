@@ -1,0 +1,234 @@
+﻿@using System.Globalization 
+
+<div class="pf-c-calendar-month">
+	<div class="pf-c-calendar-month__header">
+		<div class="pf-c-calendar-month__header-nav-control pf-m-prev-month">
+			<button class="pf-c-button pf-m-plain" type="button" aria-label="Previous month" @onclick="PreviousMonth">
+				<i class="fas fa-angle-left" aria-hidden="true"></i>
+			</button>
+		</div>
+		<div class="pf-c-calendar-month__header-month">
+			<Select Mode="SelectMode.Single">
+				@for (var i = 1; i <= 12; i++)
+				{
+					var thisMonth = i;
+					<SelectItem @key="thisMonth" Title="@CultureInfo.CurrentUICulture.DateTimeFormat.GetMonthName(thisMonth)" Selected="SelectedMonth == thisMonth" OnClick="() => SelectedMonth = thisMonth" />
+				}
+			</Select>
+		</div>
+		<div class="pf-c-calendar-month__header-year">
+			<input class="pf-c-form-control" type="number" id="@id-selected-year" aria-label="Select year" @bind-value="SelectedYear" />
+		</div>
+		<div class="pf-c-calendar-month__header-nav-control pf-m-next-month" @onclick="NextMonth">
+			<button class="pf-c-button pf-m-plain" type="button" aria-label="Next month">
+				<i class="fas fa-angle-right" aria-hidden="true"></i>
+			</button>
+		</div>
+	</div>
+	<table class="pf-c-calendar-month__calendar">
+		<thead class="pf-c-calendar-month__days" scope="col">
+			<tr class="pf-c-calendar-month__days-row">
+				<th class="pf-c-calendar-month__day">@CultureInfo.CurrentUICulture.DateTimeFormat.DayNames[0][0]</th>
+				<th class="pf-c-calendar-month__day">@CultureInfo.CurrentUICulture.DateTimeFormat.DayNames[1][0]</th>
+				<th class="pf-c-calendar-month__day">@CultureInfo.CurrentUICulture.DateTimeFormat.DayNames[2][0]</th>
+				<th class="pf-c-calendar-month__day">@CultureInfo.CurrentUICulture.DateTimeFormat.DayNames[3][0]</th>
+				<th class="pf-c-calendar-month__day">@CultureInfo.CurrentUICulture.DateTimeFormat.DayNames[4][0]</th>
+				<th class="pf-c-calendar-month__day">@CultureInfo.CurrentUICulture.DateTimeFormat.DayNames[5][0]</th>
+				<th class="pf-c-calendar-month__day">@CultureInfo.CurrentUICulture.DateTimeFormat.DayNames[6][0]</th>
+			</tr>
+		</thead>
+		<tbody class="pf-c-calendar-month__dates">
+			@foreach (var row in GetDayGrid())
+			{
+				<tr class="pf-c-calendar-month__dates-row">
+					@foreach (var day in row)
+					{
+						var disabled = (DateEnabled != null && !DateEnabled(day)) || StartDate != null && isSelectingRange && day < StartDate;
+
+						<td class="pf-c-calendar-month__dates-cell @(day.Month == SelectedMonth ? String.Empty : CssClassConstants.AdjacentMonth) @(day == DateTime.Today ? CssClassConstants.Current : String.Empty) @((StartDate == day || EndDate == day) ? CssClassConstants.Selected : String.Empty) @(StartDate == day ? CssClassConstants.StartRange : String.Empty) @(day >= StartDate && day <= EndDate ? CssClassConstants.InRange : String.Empty) @(disabled ? CssClassConstants.Disabled : String.Empty)">
+							<button class="pf-c-calendar-month__date" type="button" @onclick="() => DayClicked(day)" disabled="@disabled">@day.Day</button>
+						</td>
+					}
+				</tr>
+			}
+		</tbody>
+	</table>
+</div>
+
+@code {
+	private string id = Guid.NewGuid().ToString();
+	private bool isSelectingRange;
+
+	private int _selectedMonth = 1;
+	private int _selectedYear = DateTime.UtcNow.Year;
+	private DateTime? _startDate;
+	private DateTime? _endDate;
+
+	[Parameter]
+	public DateTime? StartDate
+	{
+		get { return _startDate; }
+		set
+		{
+			if (value == _startDate) return;
+
+			_startDate = value;
+
+			if (StartDateChanged.HasDelegate)
+				StartDateChanged.InvokeAsync(value);
+		}
+	}
+
+	[Parameter]
+	public EventCallback<DateTime?> StartDateChanged { get; set; }
+
+	[Parameter]
+	public DateTime? EndDate
+	{
+		get { return _endDate; }
+		set
+		{
+			if (value == _endDate) return;
+
+			_endDate = value;
+
+			if (EndDateChanged.HasDelegate)
+				EndDateChanged.InvokeAsync(value);
+		}
+	}
+
+	[Parameter]
+	public EventCallback<DateTime?> EndDateChanged { get; set; }
+
+	[Parameter]
+	public int SelectedMonth
+	{
+		get { return _selectedMonth; }
+		set
+		{
+			if (value == _selectedMonth) return;
+
+			_selectedMonth = value;
+
+			if (SelectedMonthChanged.HasDelegate)
+				SelectedMonthChanged.InvokeAsync(value);
+
+			StateHasChanged();
+		}
+	}
+
+	[Parameter]
+	public EventCallback<int> SelectedMonthChanged { get; set; }
+
+	[Parameter]
+	public int SelectedYear
+	{
+		get { return _selectedYear; }
+		set
+		{
+			if (value == _selectedYear) return;
+
+			_selectedYear = value;
+
+			if (SelectedYearChanged.HasDelegate)
+				SelectedYearChanged.InvokeAsync(value);
+
+			StateHasChanged();
+		}
+	}
+
+	[Parameter]
+	public EventCallback<int> SelectedYearChanged { get; set; }
+
+	[Parameter]
+	public bool Range { get; set; }
+
+	[Parameter]
+	public Func<DateTime, bool> DateEnabled { get; set; }
+
+	private void PreviousMonth()
+	{
+		if (SelectedMonth == 1)
+		{
+			SelectedMonth = 12;
+			SelectedYear--;
+		}
+		else
+		{
+			SelectedMonth--;
+		}
+
+		StateHasChanged();
+	}
+
+	private void NextMonth()
+	{
+		if (SelectedMonth == 12)
+		{
+			SelectedMonth = 1;
+			SelectedYear++;
+		}
+		else
+		{
+			SelectedMonth++;
+		}
+
+		StateHasChanged();
+	}
+
+	private List<List<DateTime>> GetDayGrid()
+	{
+		var result = new List<List<DateTime>>();
+
+		var monthStart = new DateTime(SelectedYear, SelectedMonth, 1);
+		var firstDayOfMonth = monthStart.DayOfWeek;
+		var numberOfDaysFromLastMonth = (int)firstDayOfMonth;
+		var thisDate = monthStart.AddDays(-numberOfDaysFromLastMonth);
+		var daysInMonth = DateTime.DaysInMonth(SelectedYear, SelectedMonth);
+
+		var endOfMonthReached = false;
+
+		while (!endOfMonthReached)
+		{
+			var thisWeek = new List<DateTime>();
+			for (var dayOfWeek = DayOfWeek.Sunday; dayOfWeek <= DayOfWeek.Saturday; dayOfWeek++)
+			{
+				thisWeek.Add(thisDate);
+				thisDate = thisDate.AddDays(1);
+
+				if (thisDate.Month == SelectedMonth && thisDate.Day == daysInMonth)
+					endOfMonthReached = true;
+			}
+			result.Add(thisWeek);
+		}
+
+		return result;
+	}
+
+	private void DayClicked(DateTime date)
+	{
+		if (Range)
+		{
+			if (isSelectingRange)
+			{
+				EndDate = date;
+
+				isSelectingRange = false;
+			}
+			else
+			{
+				StartDate = date;
+				EndDate = null;
+
+				isSelectingRange = true;
+			}
+		}
+		else
+		{
+			StartDate = date;
+			EndDate = date;
+		}
+
+		StateHasChanged();
+	}
+}

@@ -1,0 +1,171 @@
+﻿<div class="pf-c-dropdown @(MenuAlignment == TopBottomVerticalAlignment.Top ? CssClassConstants.Top : String.Empty) @(_expanded ? CssClassConstants.Expanded : String.Empty) @(Block ? CssClassConstants.Block : String.Empty)" @onfocusout="OnFocusOut" @onmouseover="OnMouseOver" @onmouseout="OnMouseOut" @attributes="Attributes">
+	@if (Mode == DropdownMode.Kebab)
+	{
+		<button class="pf-c-dropdown__toggle @(Mode == DropdownMode.Kebab ? CssClassConstants.Plain : String.Empty) @ButtonAdditionalCssClass" type="button" id="@_id-button" disabled="@(!Enabled)" aria-expanded="@(_expanded.ToString())" aria-label="@Text" @onclick="ToggleExpanded" @onclick:stopPropagation="true">
+			<i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+		</button>
+	}
+	else if (Mode == DropdownMode.SplitCheck)
+	{
+		<div class="pf-c-dropdown__toggle @(!Enabled ? CssClassConstants.Disabled : String.Empty) pf-m-split-button @(Primary ? CssClassConstants.Primary : String.Empty)">
+			<label class="pf-c-dropdown__toggle-check" for="@_id-check">
+				<input type="checkbox" id="@_id-check" disabled="@(!Enabled)" @bind-value="Checked" />
+				@if (!String.IsNullOrEmpty(Text) || !String.IsNullOrEmpty(IconCssClass))
+				{
+					<span class="pf-c-dropdown__toggle-text" aria-hidden="true">
+						@if (!String.IsNullOrEmpty(IconCssClass))
+						{<i class="@IconCssClass" aria-hidden="true"></i> }
+						@Text
+					</span>
+				}
+			</label>
+			<button class="pf-c-dropdown__toggle-button @ButtonAdditionalCssClass" type="button" aria-expanded="false" id="@_id-button" disabled="@(!Enabled)" @onclick="ToggleExpanded" @onclick:stopPropagation="true">
+				<i class="fas fa-caret-down" aria-hidden="true"></i>
+			</button>
+		</div>
+	}
+	else if (Mode == DropdownMode.SplitButton)
+	{
+		<div class="pf-c-dropdown__toggle @(!Enabled ? CssClassConstants.Disabled : String.Empty) pf-m-split-button @(Primary ? CssClassConstants.Primary : String.Empty)">
+			<button class="pf-c-dropdown__toggle-button @ButtonAdditionalCssClass" type="button" @onclick="SplitButtonClicked" @onclick:stopPropagation="true">
+				@if (!String.IsNullOrEmpty(IconCssClass))
+				{<i class="@IconCssClass" aria-hidden="true" aria-label=""></i> }
+				@Text
+			</button>
+			<button class="pf-c-dropdown__toggle-button @ButtonAdditionalCssClass" type="button" aria-expanded="false" id="@_id-button" disabled="@(!Enabled)" @onclick="ToggleExpanded" @onclick:stopPropagation="true">
+				<i class="fas fa-caret-down" aria-hidden="true"></i>
+			</button>
+		</div>
+	}
+	else
+	{
+		<button class="pf-c-dropdown__toggle @(Primary ? CssClassConstants.Primary : String.Empty) @ButtonAdditionalCssClass" type="button" id="@_id-button" disabled="@(!Enabled)" aria-expanded="@(_expanded.ToString())" aria-label="@Text" @onclick="ToggleExpanded" @onclick:stopPropagation="true">
+			<span class="pf-c-dropdown__toggle-text">@Text</span>
+			<i class="fas fa-caret-down pf-c-dropdown__toggle-icon" aria-hidden="true"></i>
+		</button>
+	}
+	<ul class="pf-c-dropdown__menu @(HorizontalAlignment == LeftRightHorizontalAlignment.Right ? CssClassConstants.AlignRight : String.Empty)" aria-labelledby="@_id-button" hidden="@(!_expanded)">
+		<CascadingValue Value="this" Name="Dropdown" IsFixed="true">
+			@ChildContent
+		</CascadingValue>
+	</ul>
+</div>
+
+@code {
+	private string _id = Guid.NewGuid().ToString();
+	private bool _shouldClose = true;
+	private bool _expanded;
+	private bool _checked;
+
+	public bool HasGroups { get; private set; }
+
+	[Parameter]
+	public bool Expanded {
+		get { return _expanded; }
+		set
+		{
+			if (value == _expanded) return;
+
+			_expanded = value;
+
+			ExpandedChanged.InvokeAsync(value);
+
+			StateHasChanged();
+		}
+	}
+
+	[Parameter]
+	public EventCallback<bool> ExpandedChanged { get; set; }
+
+	[Parameter]
+	public bool Checked
+	{
+		get { return _checked; }
+		set
+		{
+			if (value == _checked) return;
+
+			_checked = value;
+
+			CheckedChanged.InvokeAsync(value);
+
+			StateHasChanged();
+		}
+	}
+
+	[Parameter]
+	public EventCallback<bool> CheckedChanged { get; set; }
+
+	[Parameter]
+	public EventCallback<MouseEventArgs> SplitButtonClicked { get; set; }
+
+	[Parameter]
+	public bool Enabled { get; set; } = true;
+
+	[Parameter]
+	public string Text { get; set; }
+
+	[Parameter]
+	public string IconCssClass { get; set; }
+
+	[Parameter]
+	public bool Block { get; set; }
+
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+
+	[Parameter]
+	public DropdownMode Mode { get; set; } = DropdownMode.Normal;
+
+	[Parameter]
+	public LeftRightHorizontalAlignment HorizontalAlignment { get; set; } = LeftRightHorizontalAlignment.Left;
+
+	[Parameter]
+	public TopBottomVerticalAlignment MenuAlignment { get; set; } = TopBottomVerticalAlignment.Bottom;
+
+	[Parameter]
+	public bool Primary { get; set; }
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> Attributes { get; set; }
+
+	[Parameter]
+	public string ButtonAdditionalCssClass { get; set; }
+
+	public void SetHasGroups()
+	{
+		HasGroups = true;
+		StateHasChanged();
+	}
+
+	public void Collapse()
+	{
+		Expanded = false;
+		StateHasChanged();
+	}
+
+	private void ToggleExpanded()
+	{
+		Expanded = !Expanded;
+		StateHasChanged();
+	}
+
+	private void OnMouseOver(MouseEventArgs mouseEventArgs)
+	{
+		_shouldClose = false;
+	}
+
+	private void OnMouseOut(MouseEventArgs mouseEventArgs)
+	{
+		_shouldClose = true;
+	}
+
+	private void OnFocusOut(FocusEventArgs focusEventArgs)
+	{
+		if (Expanded && _shouldClose)
+		{
+			Expanded = false;
+			StateHasChanged();
+		}
+	}
+}

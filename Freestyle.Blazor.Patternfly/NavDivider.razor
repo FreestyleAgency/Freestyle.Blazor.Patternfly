@@ -1,0 +1,6 @@
+﻿<li class="pf-c-divider" role="separator" @attributes="AdditionalAttributes"></li>
+
+@code {
+	[Parameter(CaptureUnmatchedValues = true)]
+	public IDictionary<string, object> AdditionalAttributes { get; set; }
+}
